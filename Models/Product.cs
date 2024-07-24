@@ -1,4 +1,8 @@
-﻿namespace GoldStore.Models;
+﻿using System;
+using System.Collections.Generic;
+using NodaTime;
+
+namespace GoldStore.Models;
 
 public partial class Product
 {
@@ -10,7 +14,7 @@ public partial class Product
 
     public short Status { get; set; }
 
-    public DateTime RegDate { get; set; }
+    public OffsetTime RegDate { get; set; }
 
     public int DefaultWeight { get; set; }
 

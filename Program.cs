@@ -1,3 +1,5 @@
+using GoldStore.BusinessLogics;
+using GoldStore.BusinessLogics.IBusinessLogics;
 using GoldStore.Middleware;
 using GoldStore.Models;
 using Microsoft.EntityFrameworkCore;
@@ -56,6 +58,8 @@ namespace GoldStore
             builder.Services.AddDbContext<GStoreDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("GStoreDbContext"), options => options.UseNodaTime()));
 
             builder.Services.AddProblemDetails();
+
+            builder.Services.AddScoped<IShopping, Shopping>();
 
             WebApplication? app = builder.Build();
             // Configure the HTTP request pipeline.

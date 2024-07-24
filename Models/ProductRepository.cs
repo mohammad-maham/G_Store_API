@@ -1,4 +1,8 @@
-﻿namespace GoldStore.Models;
+﻿using System;
+using System.Collections.Generic;
+using NodaTime;
+
+namespace GoldStore.Models;
 
 public partial class ProductRepository
 {
@@ -16,5 +20,5 @@ public partial class ProductRepository
 
     public string? Description { get; set; }
 
-    public DateTime RegDate { get; set; }
+    public OffsetTime RegDate { get; set; }
 }

@@ -20,18 +20,20 @@ namespace GoldStore.Controllers
         }
 
         [HttpPost]
+        [Route("[action]")]
         public async Task<IActionResult> Buy([FromBody] OrderVM order)
         {
             if (order != null && order.Weight != 0 && order.UserId != 0)
             {
                 bool isSuccess = await _shopping.Buy(order.Weight, order.UserId);
                 string jsonData = JsonConvert.SerializeObject(isSuccess);
-                return Ok(new ApiResponse(data: jsonData));
+                return Ok(new ApiResponse(data: jsonData, statusCode: isSuccess ? 200 : 400));
             }
             return BadRequest(new ApiResponse(404));
         }
 
         [HttpPost]
+        [Route("[action]")]
         public async Task<IActionResult> Sell([FromBody] OrderVM order)
         {
             if (order != null && order.Weight != 0 && order.UserId != 0)

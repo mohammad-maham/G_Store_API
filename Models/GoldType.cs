@@ -1,4 +1,7 @@
-﻿namespace GoldStore.Models;
+﻿using System;
+using System.Collections.Generic;
+
+namespace GoldStore.Models;
 
 public partial class GoldType
 {

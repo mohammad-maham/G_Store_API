@@ -1,4 +1,8 @@
-﻿namespace GoldStore.Models;
+﻿using System;
+using System.Collections.Generic;
+using NodaTime;
+
+namespace GoldStore.Models;
 
 public partial class Supplier
 {
@@ -10,7 +14,7 @@ public partial class Supplier
 
     public long RegUserId { get; set; }
 
-    public DateTime RegDate { get; set; }
+    public OffsetTime RegDate { get; set; }
 
     public string SupplierInfo { get; set; } = null!;
 

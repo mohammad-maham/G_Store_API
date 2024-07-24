@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 
 namespace GoldStore.Models;
 
@@ -12,6 +14,8 @@ public partial class GStoreDbContext : DbContext
         : base(options)
     {
     }
+
+    public virtual DbSet<GoldEntity> GoldEntities { get; set; }
 
     public virtual DbSet<GoldRepository> GoldRepositories { get; set; }
 
@@ -35,14 +39,25 @@ public partial class GStoreDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseNpgsql("Host=194.60.231.81:5432;Database=G_Store_DB;Username=postgres;Password=Maham@7796", x => x.UseNodaTime());
+        optionsBuilder.UseNpgsql("Host=194.60.231.81:5432;Database=G_Store_DB;Username=postgres;Password=Maham@7796",
+            x => x.UseNodaTime());
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
         AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
-
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<GoldEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("GoldEntity_pkey");
+
+            entity.ToTable("GoldEntity");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Caption).HasColumnType("character varying");
+            entity.Property(e => e.Name).HasMaxLength(100);
+        });
+
         modelBuilder.Entity<GoldRepository>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("GoldRepository_pkey");

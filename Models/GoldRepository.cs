@@ -1,4 +1,8 @@
-﻿namespace GoldStore.Models;
+﻿using System;
+using System.Collections.Generic;
+using NodaTime;
+
+namespace GoldStore.Models;
 
 public partial class GoldRepository
 {
