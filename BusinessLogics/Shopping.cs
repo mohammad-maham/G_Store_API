@@ -20,9 +20,9 @@ namespace GoldStore.BusinessLogics
             return false;
         }
 
-        public async Task<bool> CheckGoldInventory(int weight)
+        public async Task<bool> CheckGoldInventory(int weight, int goldType = 1)
         {
-            return await _store.GoldRepositories.AnyAsync(x => x.Weight < weight && x.);
+            return await _store.GoldRepositories.AnyAsync(x => x.Weight < weight && x.GoldType == goldType);
         }
 
         public async Task<bool> Sell(int weight, long userId)

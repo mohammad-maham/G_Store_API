@@ -4,6 +4,6 @@
     {
         Task<bool> Buy(int weight, long userId);
         Task<bool> Sell(int weight, long userId);
-        Task<bool> CheckGoldInventory(int weight);
+        Task<bool> CheckGoldInventory(int weight, int goldType = 1);
     }
 }
