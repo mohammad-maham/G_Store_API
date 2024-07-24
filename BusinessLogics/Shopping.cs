@@ -1,5 +1,6 @@
 ﻿using GoldStore.BusinessLogics.IBusinessLogics;
 using GoldStore.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace GoldStore.BusinessLogics
 {
@@ -17,6 +18,11 @@ namespace GoldStore.BusinessLogics
         public async Task<bool> Buy(int weight, long userId)
         {
             return false;
+        }
+
+        public async Task<bool> CheckGoldInventory(int weight)
+        {
+            return await _store.GoldRepositories.AnyAsync(x => x.Weight < weight && x.);
         }
 
         public async Task<bool> Sell(int weight, long userId)
