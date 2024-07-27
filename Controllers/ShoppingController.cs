@@ -23,7 +23,7 @@ namespace GoldStore.Controllers
         [Route("[action]")]
         public async Task<IActionResult> Buy([FromBody] OrderVM order)
         {
-            if (order != null && order.Weight != 0 && order.UserId != 0)
+            if (order != null && order.Weight > 0 && order.UserId != 0)
             {
                 bool isSuccess = await _shopping.Buy(order.Weight, order.UserId);
                 string jsonData = JsonConvert.SerializeObject(isSuccess);
@@ -41,6 +41,30 @@ namespace GoldStore.Controllers
                 bool isSuccess = await _shopping.Sell(order.Weight, order.UserId);
                 string jsonData = JsonConvert.SerializeObject(isSuccess);
                 return Ok(new ApiResponse(data: jsonData));
+            }
+            return BadRequest(new ApiResponse(404));
+        }
+
+        [HttpPost]
+        [Route("[action]")]
+        public async Task<IActionResult> InsertThreshold([FromBody] AmountThreshold threshold)
+        {
+            if (threshold != null && threshold.SelThreshold != 0 && threshold.BuyThreshold != 0)
+            {
+                await _shopping.InsertAmountThreshold(threshold);
+                return Ok(new ApiResponse());
+            }
+            return BadRequest(new ApiResponse(404));
+        }
+
+        [HttpPost]
+        [Route("[action]")]
+        public async Task<IActionResult> UpdateThreshold([FromBody] AmountThreshold threshold)
+        {
+            if (threshold != null && threshold.SelThreshold != 0 && threshold.BuyThreshold != 0 && threshold.Id != 0)
+            {
+                await _shopping.UpdateAmountThreshold(threshold);
+                return Ok(new ApiResponse());
             }
             return BadRequest(new ApiResponse(404));
         }

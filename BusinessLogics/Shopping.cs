@@ -29,13 +29,16 @@ namespace GoldStore.BusinessLogics
             using TransactionScope scope = new(TransactionScopeOption.RequiresNew, scopeOption, TransactionScopeAsyncFlowOption.Enabled);
             try
             {
-                repository = store.GoldRepositories.FirstOrDefault(r => r.Id == 1000000000);
-                if (repository != null && repository.Weight > 0)
+                if (await CheckGoldInventory(weight))
                 {
-                    repository!.Weight -= weight;
-                    store.GoldRepositories.Update(repository);
-                    await store.SaveChangesAsync();
-                    result = true;
+                    repository = store.GoldRepositories.FirstOrDefault(r => r.Weight > weight);
+                    if (repository != null && repository.Id != 0)
+                    {
+                        repository!.Weight -= weight;
+                        store.GoldRepositories.Update(repository);
+                        await store.SaveChangesAsync();
+                        result = true;
+                    }
                 }
                 result = false;
                 scope.Complete();
@@ -48,15 +51,40 @@ namespace GoldStore.BusinessLogics
             }
         }
 
-        public async Task<bool> CheckGoldInventory(int weight, int goldType = 1)
+        public async Task<bool> CheckGoldInventory(int weight, int goldType = 1) => await _store.GoldRepositories.AnyAsync(x => x.Weight < weight && x.GoldType == goldType);
+
+        public async Task InsertAmountThreshold(AmountThreshold amountThreshold)
         {
-            return await _store.GoldRepositories.AnyAsync(x => x.Weight < weight && x.GoldType == goldType);
+            if (amountThreshold != null && amountThreshold.SelThreshold != 0 && amountThreshold.BuyThreshold != 0)
+            {
+                bool isExist = await isExistAmountThreshold(amountThreshold.Id);
+                if (!isExist)
+                {
+                    await _store.AmountThresholds.AddAsync(amountThreshold);
+                    await _store.SaveChangesAsync();
+                }
+            }
         }
+
+        public async Task<bool> isExistAmountThreshold(long amountId) => await _store.AmountThresholds.AnyAsync(x => x.Id == amountId || x.Status == 1);
 
         public async Task<bool> Sell(int weight, long userId)
         {
             await Task.Run(() => { });
             return false;
+        }
+
+        public async Task UpdateAmountThreshold(AmountThreshold amountThreshold)
+        {
+            if (amountThreshold != null && amountThreshold.Id != 0)
+            {
+                bool isExist = await isExistAmountThreshold(amountThreshold.Id);
+                if (isExist)
+                {
+                    _store.AmountThresholds.Update(amountThreshold);
+                    await _store.SaveChangesAsync();
+                }
+            }
         }
     }
 }

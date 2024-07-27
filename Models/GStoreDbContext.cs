@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace GoldStore.Models;
 
@@ -37,6 +35,11 @@ public partial class GStoreDbContext : DbContext
 
     public virtual DbSet<Unit> Units { get; set; }
 
+    public virtual DbSet<AmountThreshold> AmountThresholds { get; set; }
+
+    public virtual DbSet<ArchiveAmountThreshold> ArchiveAmountThresholds { get; set; }
+
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseNpgsql("Host=194.60.231.81:5432;Database=G_Store_DB;Username=postgres;Password=Maham@7796",
@@ -47,6 +50,24 @@ public partial class GStoreDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<AmountThreshold>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("AmountThreshold_pkey");
+
+            entity.ToTable("AmountThreshold");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+        });
+
+        modelBuilder.Entity<ArchiveAmountThreshold>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("ArchiveAmountThreshold_pkey");
+
+            entity.ToTable("ArchiveAmountThreshold");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+        });
+
         modelBuilder.Entity<GoldEntity>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("GoldEntity_pkey");
