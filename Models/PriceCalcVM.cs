@@ -2,7 +2,7 @@
 
 namespace GoldStore.Models
 {
-    public class PriceCalcVM
+    public partial class PriceCalcVM
     {
         [Display(Name = "نوع خدمت"), Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         public CalcTypes GoldCalcType { get; set; } = CalcTypes.none;
@@ -10,8 +10,8 @@ namespace GoldStore.Models
         [Display(Name = "وزن طلا"), Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         public double GoldWeight { get; set; } = 0.0;
 
-        [Display(Name = "نوع محصول"), Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        public ProductTypes ProductTypes { get; set; }
+        [Display(Name = "عیار"), Required(ErrorMessage = "لطفا {0} را وارد کنید")]
+        public double GoldCarat { get; set; } = 750.0;
     }
 
     public enum CalcTypes
@@ -19,15 +19,5 @@ namespace GoldStore.Models
         none = 0,
         buy = 1,
         sell = 2
-    }
-
-    public enum ProductTypes
-    {
-        global = 0,
-        gold750 = 1,
-        gold870 = 2,
-        gold910 = 3,
-        gold100 = 4,
-        goldTransferSlip = 5
     }
 }

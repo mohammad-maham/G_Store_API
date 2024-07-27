@@ -77,7 +77,7 @@ namespace GoldStore.Controllers
             double price = 0.0;
             if (calcVM != null)
             {
-                price = await _shopping.GetPrices(calcVM.ProductTypes, calcVM.GoldCalcType, calcVM.GoldWeight);
+                price = await _shopping.GetPrices(calcVM.GoldCalcType, calcVM.GoldWeight, calcVM.GoldCarat);
                 if (price > 0)
                 {
                     string jsonData = JsonConvert.SerializeObject(price);

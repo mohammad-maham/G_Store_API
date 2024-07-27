@@ -10,8 +10,8 @@ namespace GoldStore.BusinessLogics.IBusinessLogics
         Task UpdateAmountThreshold(AmountThreshold tresholdVM);
         Task InsertAmountThreshold(AmountThreshold amountThreshold);
         Task<bool> isExistAmountThreshold(long amountId);
-        double GetBasePrices(ProductTypes productTypes, double weight = 0.0);
-        Task<double> GetPrices(ProductTypes productTypes, CalcTypes calcTypes, double weight = 0.0);
+        Task<double> GetBasePrices(double weight = 0.0);
+        Task<double> GetPrices(CalcTypes calcTypes, double weight = 0.0, double carat = 750.0);
         Task<AmountThreshold> GetLastThresholdAmount();
     }
 }

@@ -7,14 +7,21 @@ namespace GoldStore.BusinessLogics
 {
     public class Shopping : IShopping
     {
-        private readonly ILogger<Shopping> _logger;
+        private readonly ILogger<Shopping>? _logger;
         private readonly GStoreDbContext _store;
-        private const double Gold750G = 33734000;
+        private readonly IGateway _gateway;
 
-        public Shopping(ILogger<Shopping> logger, GStoreDbContext store)
+        public Shopping()
+        {
+            _store = new GStoreDbContext();
+            _gateway = new Gateway();
+        }
+
+        public Shopping(ILogger<Shopping> logger, GStoreDbContext store, IGateway gateway)
         {
             _logger = logger;
             _store = store;
+            _gateway = gateway;
         }
 
         public async Task<bool> Buy(int weight, long userId)
@@ -35,6 +42,11 @@ namespace GoldStore.BusinessLogics
                     repository = store.GoldRepositories.FirstOrDefault(r => r.Weight > weight);
                     if (repository != null && repository.Id != 0)
                     {
+                        // STEP 1:
+                        // Sayid Method
+                        // STEP 2:
+                        // Gold Repository Transaction
+                        // STEP 3:
                         repository!.Weight -= weight;
                         store.GoldRepositories.Update(repository);
                         await store.SaveChangesAsync();
@@ -54,29 +66,10 @@ namespace GoldStore.BusinessLogics
 
         public async Task<bool> CheckGoldInventory(int weight, int goldType = 1) => await _store.GoldRepositories.AnyAsync(x => x.Weight < weight && x.GoldType == goldType);
 
-        public double GetBasePrices(ProductTypes productTypes, double weight = 0)
+        public async Task<double> GetBasePrices(double weight = 0.0)
         {
-            double res = 0.0;
-            switch (productTypes)
-            {
-                case ProductTypes.global:
-                    res = weight * Gold750G;
-                    break;
-                case ProductTypes.gold750:
-                    res = weight * Gold750G;
-                    break;
-                case ProductTypes.gold870:
-                    break;
-                case ProductTypes.gold910:
-                    break;
-                case ProductTypes.gold100:
-                    break;
-                case ProductTypes.goldTransferSlip:
-                    break;
-                default:
-                    break;
-            }
-            return res;
+            double onlinePrice = await _gateway.GetOnlineGoldPriceAsync();
+            return onlinePrice * weight;
         }
 
         public async Task InsertAmountThreshold(AmountThreshold amountThreshold)
@@ -112,6 +105,11 @@ namespace GoldStore.BusinessLogics
                     repository = store.GoldRepositories.FirstOrDefault(r => r.Weight > weight);
                     if (repository != null && repository.Id != 0)
                     {
+                        // STEP 1:
+                        // Sayid Method
+                        // STEP 2:
+                        // Gold Repository Transaction
+                        // STEP 3:
                         repository!.Weight += weight;
                         store.GoldRepositories.Update(repository);
                         await store.SaveChangesAsync();
@@ -142,21 +140,21 @@ namespace GoldStore.BusinessLogics
             }
         }
 
-        public async Task<double> GetPrices(ProductTypes productTypes, CalcTypes calcTypes, double weight = 0)
+        public async Task<double> GetPrices(CalcTypes calcTypes, double weight = 0.0, double carat = 750.0)
         {
             double res = 0.0;
-            double basePrice = GetBasePrices(productTypes, weight);
+            double basePrice = await GetBasePrices(weight);
             AmountThreshold? threshold = await GetLastThresholdAmount();
             switch (calcTypes)
             {
                 case CalcTypes.none:
-                    res = basePrice;
+                    res = basePrice * carat;
                     break;
                 case CalcTypes.buy:
-                    res = ThresholdsSault(threshold.BuyThreshold, basePrice);
+                    res = ThresholdsSault(threshold.BuyThreshold, basePrice, calcTypes) * carat;
                     break;
                 case CalcTypes.sell:
-                    res = ThresholdsSault(threshold.SelThreshold, basePrice);
+                    res = ThresholdsSault(threshold.SelThreshold, basePrice, calcTypes) * carat;
                     break;
                 default:
                     break;
@@ -164,21 +162,52 @@ namespace GoldStore.BusinessLogics
             return res;
         }
 
-        private double ThresholdsSault(double thresholdValue, double basePrice)
+        private double ThresholdsSault(double thresholdValue, double basePrice, CalcTypes calcType)
         {
             double result = 0.0;
-            if (thresholdValue < 1)
+            switch (calcType)
             {
-                // Percentage
+                case CalcTypes.none:
+                    if (thresholdValue < 1)
+                    {
+                        // Percentage
+                    }
+                    else
+                    {
+                        // Price
+                        result = thresholdValue * basePrice;
+                    }
+                    break;
+                case CalcTypes.buy:
+                    if (thresholdValue < 1)
+                    {
+                        // Percentage
+                    }
+                    else
+                    {
+                        // Price
+                        result = thresholdValue * basePrice;
+                    }
+                    break;
+                case CalcTypes.sell:
+                    if (thresholdValue < 1)
+                    {
+                        // Percentage
+                    }
+                    else
+                    {
+                        // Price
+                        result = thresholdValue * basePrice;
+                    }
+                    break;
+                default:
+                    break;
             }
-            else
-            {
-                // Price
-                result = thresholdValue * basePrice;
-            }
+
             return result;
         }
 
         public async Task<AmountThreshold> GetLastThresholdAmount() => await _store.AmountThresholds.FirstOrDefaultAsync(x => x.Status == 1 && x.BuyThreshold != 0 && x.SelThreshold != 0);
+
     }
 }
