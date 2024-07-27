@@ -25,7 +25,7 @@ namespace GoldStore.Controllers
         {
             if (order != null && order.Weight > 0 && order.UserId != 0)
             {
-                bool isSuccess = await _shopping.Buy(order.Weight, order.UserId);
+                bool isSuccess = await _shopping.Buy(order);
                 string jsonData = JsonConvert.SerializeObject(isSuccess);
                 return Ok(new ApiResponse(data: jsonData, statusCode: isSuccess ? 200 : 400));
             }
@@ -38,7 +38,7 @@ namespace GoldStore.Controllers
         {
             if (order != null && order.Weight != 0 && order.UserId != 0)
             {
-                bool isSuccess = await _shopping.Sell(order.Weight, order.UserId);
+                bool isSuccess = await _shopping.Sell(order);
                 string jsonData = JsonConvert.SerializeObject(isSuccess);
                 return Ok(new ApiResponse(data: jsonData));
             }

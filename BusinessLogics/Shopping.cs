@@ -1,4 +1,5 @@
 ﻿using GoldStore.BusinessLogics.IBusinessLogics;
+using GoldStore.Helpers;
 using GoldStore.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Transactions;
@@ -24,7 +25,7 @@ namespace GoldStore.BusinessLogics
             _gateway = gateway;
         }
 
-        public async Task<bool> Buy(int weight, long userId)
+        public async Task<bool> Buy(OrderVM order)
         {
             bool result = false;
             GoldRepository? repository = new();
@@ -37,17 +38,31 @@ namespace GoldStore.BusinessLogics
             using TransactionScope scope = new(TransactionScopeOption.RequiresNew, scopeOption, TransactionScopeAsyncFlowOption.Enabled);
             try
             {
-                if (await CheckGoldInventory(weight))
+                if (await CheckGoldInventory(order.Weight))
                 {
-                    repository = store.GoldRepositories.FirstOrDefault(r => r.Weight > weight);
+                    repository = store.GoldRepositories.FirstOrDefault(r => r.Weight > order.Weight);
                     if (repository != null && repository.Id != 0)
                     {
+                        GoldRepositoryTransaction repositoryTransaction = new();
+                        int repoWeight = repository!.Weight;
+                        repository!.Weight -= order.Weight;
                         // STEP 1:
-                        // Sayid Method
+                        // Wallet Exchange Transaction
+
                         // STEP 2:
-                        // Gold Repository Transaction
+                        repositoryTransaction.Id = DataBaseHelper.GetPostgreSQLSequenceNextVal(store, "seq_goldrepositorytransactions");
+                        repositoryTransaction.Weight = order.Weight;
+                        repositoryTransaction.RegDate = DateTime.Now;
+                        repositoryTransaction.RegUserId = order.UserId;
+                        repositoryTransaction.GoldRepositoryId = repository.Id;
+                        repositoryTransaction.LastGoldValue = repoWeight;
+                        repositoryTransaction.NewGoldValue = repository.Weight;
+                        repositoryTransaction.Status = 0;
+                        repositoryTransaction.TransactionMode = 2; // Online
+                        repositoryTransaction.TransactionType = 2; // Buy
+                        await store.GoldRepositoryTransactions.AddAsync(repositoryTransaction);
+
                         // STEP 3:
-                        repository!.Weight -= weight;
                         store.GoldRepositories.Update(repository);
                         await store.SaveChangesAsync();
                         result = true;
@@ -87,7 +102,7 @@ namespace GoldStore.BusinessLogics
 
         public async Task<bool> isExistAmountThreshold(long amountId) => await _store.AmountThresholds.AnyAsync(x => x.Id == amountId || x.Status == 1);
 
-        public async Task<bool> Sell(int weight, long userId)
+        public async Task<bool> Sell(OrderVM order)
         {
             bool result = false;
             GoldRepository? repository = new();
@@ -100,17 +115,31 @@ namespace GoldStore.BusinessLogics
             using TransactionScope scope = new(TransactionScopeOption.RequiresNew, scopeOption, TransactionScopeAsyncFlowOption.Enabled);
             try
             {
-                if (await CheckGoldInventory(weight))
+                if (await CheckGoldInventory(order.Weight))
                 {
-                    repository = store.GoldRepositories.FirstOrDefault(r => r.Weight > weight);
+                    repository = store.GoldRepositories.FirstOrDefault(r => r.Weight <= order.Weight);
                     if (repository != null && repository.Id != 0)
                     {
+                        GoldRepositoryTransaction repositoryTransaction = new();
+                        int repoWeight = repository!.Weight;
+                        repository!.Weight += order.Weight;
                         // STEP 1:
-                        // Sayid Method
+                        // Wallet Exchange Transaction
+
                         // STEP 2:
-                        // Gold Repository Transaction
+                        repositoryTransaction.Id = DataBaseHelper.GetPostgreSQLSequenceNextVal(store, "seq_goldrepositorytransactions");
+                        repositoryTransaction.Weight = order.Weight;
+                        repositoryTransaction.RegDate = DateTime.Now;
+                        repositoryTransaction.RegUserId = order.UserId;
+                        repositoryTransaction.GoldRepositoryId = repository.Id;
+                        repositoryTransaction.LastGoldValue = repoWeight;
+                        repositoryTransaction.NewGoldValue = repository.Weight;
+                        repositoryTransaction.Status = 0;
+                        repositoryTransaction.TransactionMode = 2; // Online
+                        repositoryTransaction.TransactionType = 1; // Sell
+                        await store.GoldRepositoryTransactions.AddAsync(repositoryTransaction);
+
                         // STEP 3:
-                        repository!.Weight += weight;
                         store.GoldRepositories.Update(repository);
                         await store.SaveChangesAsync();
                         result = true;

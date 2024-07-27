@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using NodaTime;
-
-namespace GoldStore.Models;
+﻿namespace GoldStore.Models;
 
 public partial class GoldRepositoryTransaction
 {
@@ -20,7 +16,7 @@ public partial class GoldRepositoryTransaction
 
     public long RegUserId { get; set; }
 
-    public OffsetTime RegDate { get; set; }
+    public DateTime RegDate { get; set; }
 
     public decimal Weight { get; set; }
 
