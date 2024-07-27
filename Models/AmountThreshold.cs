@@ -8,9 +8,9 @@ public partial class AmountThreshold
 
     public long RegUserId { get; set; }
 
-    public int BuyThreshold { get; set; }
+    public double BuyThreshold { get; set; }
 
-    public int SelThreshold { get; set; }
+    public double SelThreshold { get; set; }
 
     public decimal CurrentPrice { get; set; }
 

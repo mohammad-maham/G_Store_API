@@ -68,5 +68,23 @@ namespace GoldStore.Controllers
             }
             return BadRequest(new ApiResponse(404));
         }
+
+
+        [HttpPost]
+        [Route("[action]")]
+        public async Task<IActionResult> GetPrices([FromBody] PriceCalcVM calcVM)
+        {
+            double price = 0.0;
+            if (calcVM != null)
+            {
+                price = await _shopping.GetPrices(calcVM.ProductTypes, calcVM.GoldCalcType, calcVM.GoldWeight);
+                if (price > 0)
+                {
+                    string jsonData = JsonConvert.SerializeObject(price);
+                    return Ok(new ApiResponse(data: jsonData));
+                }
+            }
+            return BadRequest(new ApiResponse(404));
+        }
     }
 }
