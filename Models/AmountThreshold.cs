@@ -12,9 +12,11 @@ public partial class AmountThreshold
 
     public double SelThreshold { get; set; }
 
-    public decimal CurrentPrice { get; set; }
+    public double CurrentPrice { get; set; }
 
     public DateTime RegDate { get; set; }
 
     public DateTime ExpireEffectDate { get; set; }
+
+    public int IsOnlinePrice { get; set; }
 }

@@ -13,5 +13,8 @@ namespace GoldStore.BusinessLogics.IBusinessLogics
         Task<double> GetBasePrices(double weight = 0.0);
         Task<double> GetPrices(CalcTypes calcTypes, double weight = 0.0, double carat = 750.0);
         Task<AmountThreshold> GetLastThresholdAmount();
+        Task<GoldRepository> ChargeGoldRepository(ChargeStore chargeStore);
+        Task InsertSupervisorThresholds(AmountThresholdVM thresholdVM);
+        Task<AmountThreshold> GetAmountThreshold(long thresholdId);
     }
 }

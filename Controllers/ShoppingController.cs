@@ -45,29 +45,29 @@ namespace GoldStore.Controllers
             return BadRequest(new ApiResponse(404));
         }
 
-        [HttpPost]
-        [Route("[action]")]
-        public async Task<IActionResult> InsertThreshold([FromBody] AmountThreshold threshold)
-        {
-            if (threshold != null && threshold.SelThreshold != 0 && threshold.BuyThreshold != 0)
-            {
-                await _shopping.InsertAmountThreshold(threshold);
-                return Ok(new ApiResponse());
-            }
-            return BadRequest(new ApiResponse(404));
-        }
+        //[HttpPost]
+        //[Route("[action]")]
+        //public async Task<IActionResult> InsertThreshold([FromBody] AmountThreshold threshold)
+        //{
+        //    if (threshold != null && threshold.SelThreshold != 0 && threshold.BuyThreshold != 0)
+        //    {
+        //        await _shopping.InsertAmountThreshold(threshold);
+        //        return Ok(new ApiResponse());
+        //    }
+        //    return BadRequest(new ApiResponse(404));
+        //}
 
-        [HttpPost]
-        [Route("[action]")]
-        public async Task<IActionResult> UpdateThreshold([FromBody] AmountThreshold threshold)
-        {
-            if (threshold != null && threshold.SelThreshold != 0 && threshold.BuyThreshold != 0 && threshold.Id != 0)
-            {
-                await _shopping.UpdateAmountThreshold(threshold);
-                return Ok(new ApiResponse());
-            }
-            return BadRequest(new ApiResponse(404));
-        }
+        //[HttpPost]
+        //[Route("[action]")]
+        //public async Task<IActionResult> UpdateThreshold([FromBody] AmountThreshold threshold)
+        //{
+        //    if (threshold != null && threshold.SelThreshold != 0 && threshold.BuyThreshold != 0 && threshold.Id != 0)
+        //    {
+        //        await _shopping.UpdateAmountThreshold(threshold);
+        //        return Ok(new ApiResponse());
+        //    }
+        //    return BadRequest(new ApiResponse(404));
+        //}
 
 
         [HttpPost]
@@ -83,6 +83,44 @@ namespace GoldStore.Controllers
                     string jsonData = JsonConvert.SerializeObject(price);
                     return Ok(new ApiResponse(data: jsonData));
                 }
+            }
+            return BadRequest(new ApiResponse(404));
+        }
+
+        [HttpPost]
+        [Route("[action]")]
+        public async Task<IActionResult> ChargeStore([FromBody] ChargeStore chargeStore)
+        {
+            if (chargeStore != null && chargeStore.Weight > 0)
+            {
+                GoldRepository? goldRepository = await _shopping.ChargeGoldRepository(chargeStore);
+                string jsonData = JsonConvert.SerializeObject(goldRepository);
+                return Ok(new ApiResponse(data: jsonData));
+            }
+            return BadRequest(new ApiResponse(404));
+        }
+
+        [HttpPost]
+        [Route("[action]")]
+        public async Task<IActionResult> InsertThreshold([FromBody] AmountThresholdVM threshold)
+        {
+            if (threshold != null && threshold.RegUserId != 0)
+            {
+                await _shopping.InsertSupervisorThresholds(threshold);
+                return Ok(new ApiResponse());
+            }
+            return BadRequest(new ApiResponse(404));
+        }
+
+        [HttpPost]
+        [Route("[action]")]
+        public async Task<IActionResult> GetThreshold([FromBody] AmountThresholdVM threshold)
+        {
+            if (threshold != null && threshold.Id != 0)
+            {
+                AmountThreshold? amountThreshold = await _shopping.GetAmountThreshold(threshold.Id);
+                string jsonData = JsonConvert.SerializeObject(amountThreshold);
+                return Ok(new ApiResponse(data: jsonData));
             }
             return BadRequest(new ApiResponse(404));
         }

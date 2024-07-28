@@ -238,5 +238,105 @@ namespace GoldStore.BusinessLogics
 
         public async Task<AmountThreshold> GetLastThresholdAmount() => await _store.AmountThresholds.FirstOrDefaultAsync(x => x.Status == 1 && x.BuyThreshold != 0 && x.SelThreshold != 0);
 
+        public async Task<GoldRepository> ChargeGoldRepository(ChargeStore chargeStore)
+        {
+
+            GoldRepository? repo = await _store
+                .GoldRepositories
+                .FirstOrDefaultAsync(x => x.Carat == chargeStore.Carat && x.Status == 1 && x.GoldType == chargeStore.GoldType);
+
+            if (repo != null)
+            {
+                repo.Weight = chargeStore.Weight;
+                repo.RegDate = DateTime.Now;
+                repo.Carat = chargeStore.Carat;
+                repo.Status = chargeStore.Status;
+                repo.CaratologyInfo = chargeStore.CaratologyInfo;
+                repo.EntityType = chargeStore.EntityType;
+                repo.RegUserId = chargeStore.RegUserId;
+                repo.GoldType = chargeStore.GoldType;
+                _store.GoldRepositories.Update(repo);
+                await _store.SaveChangesAsync();
+            }
+            else
+            {
+                repo!.Id = DataBaseHelper.GetPostgreSQLSequenceNextVal(_store, "seq_goldrepository");
+                repo.Weight = chargeStore.Weight;
+                repo.RegDate = DateTime.Now;
+                repo.Carat = chargeStore.Carat;
+                repo.Status = chargeStore.Status;
+                repo.CaratologyInfo = chargeStore.CaratologyInfo;
+                repo.EntityType = chargeStore.EntityType;
+                repo.RegUserId = chargeStore.RegUserId;
+                repo.GoldType = chargeStore.GoldType;
+                await _store.GoldRepositories.AddAsync(repo);
+                await _store.SaveChangesAsync();
+            }
+            return repo;
+        }
+
+        public async Task InsertSupervisorThresholds(AmountThresholdVM thresholdVM)
+        {
+            AmountThreshold? threshold = new();
+            double onlinePrice = await _gateway.GetOnlineGoldPriceAsync();
+            thresholdVM.CurrentPrice = thresholdVM.IsOnlinePrice == 1 ? onlinePrice : thresholdVM.CurrentPrice;
+
+            if (thresholdVM.Id != 0)
+            {
+                threshold = await _store.AmountThresholds
+                    .FirstOrDefaultAsync(x => x.Id == thresholdVM.Id && x.Status == 1 && x.RegUserId != 0);
+
+                if (thresholdVM != null)
+                {
+                    threshold!.ExpireEffectDate = thresholdVM.ExpireEffectDate;
+                    threshold.CurrentPrice = thresholdVM.CurrentPrice;
+                    threshold.IsOnlinePrice = thresholdVM.IsOnlinePrice;
+                    threshold.Status = thresholdVM.Status;
+                    threshold.BuyThreshold = thresholdVM.BuyThreshold;
+                    threshold.SelThreshold = thresholdVM.SelThreshold;
+                    threshold.RegUserId = thresholdVM.RegUserId;
+                    _store.AmountThresholds.Update(threshold);
+                    await _store.SaveChangesAsync();
+                }
+            }
+            else
+            {
+                threshold = await _store.AmountThresholds.FirstOrDefaultAsync();
+                if (threshold != null && threshold.Id != 0)
+                {
+                    threshold.ExpireEffectDate = thresholdVM.ExpireEffectDate;
+                    threshold.CurrentPrice = thresholdVM.CurrentPrice;
+                    threshold.IsOnlinePrice = thresholdVM.IsOnlinePrice;
+                    threshold.Status = thresholdVM.Status;
+                    threshold.BuyThreshold = thresholdVM.BuyThreshold;
+                    threshold.SelThreshold = thresholdVM.SelThreshold;
+                    threshold.RegUserId = thresholdVM.RegUserId;
+                    _store.AmountThresholds.Update(threshold);
+                    await _store.SaveChangesAsync();
+                }
+                else
+                {
+                    threshold!.ExpireEffectDate = thresholdVM.ExpireEffectDate;
+                    threshold.CurrentPrice = thresholdVM.CurrentPrice;
+                    threshold.IsOnlinePrice = thresholdVM.IsOnlinePrice;
+                    threshold.Status = thresholdVM.Status;
+                    threshold.BuyThreshold = thresholdVM.BuyThreshold;
+                    threshold.SelThreshold = thresholdVM.SelThreshold;
+                    threshold.RegUserId = thresholdVM.RegUserId;
+                    threshold.RegDate = DateTime.Now;
+                    await _store.AmountThresholds.AddAsync(threshold);
+                    await _store.SaveChangesAsync();
+                }
+            }
+        }
+
+        public async Task<AmountThreshold> GetAmountThreshold(long thresholdId)
+        {
+            AmountThreshold? amountThreshold = new();
+            amountThreshold = await _store.AmountThresholds.FirstOrDefaultAsync(x => x.Id == thresholdId && x.Status == 1);
+            if (amountThreshold == null || amountThreshold.Id == 0)
+                amountThreshold = await _store.AmountThresholds.FirstOrDefaultAsync(x => x.RegUserId == 0 && x.Status == 1);
+            return amountThreshold;
+        }
     }
 }
