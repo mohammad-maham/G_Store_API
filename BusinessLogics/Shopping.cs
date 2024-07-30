@@ -1,4 +1,5 @@
 ﻿using GoldStore.BusinessLogics.IBusinessLogics;
+using GoldStore.Errors;
 using GoldStore.Helpers;
 using GoldStore.Models;
 using Microsoft.EntityFrameworkCore;
@@ -28,9 +29,9 @@ namespace GoldStore.BusinessLogics
             _wallet = wallet;
         }
 
-        public async Task<bool> Buy(OrderVM order)
+        public async Task<ApiResponse> Buy(OrderVM order)
         {
-            bool result = false;
+            ApiResponse response = new();
             GoldRepository? repository = new();
             using GStoreDbContext? store = _store;
             TransactionOptions scopeOption = new()
@@ -50,39 +51,60 @@ namespace GoldStore.BusinessLogics
                         int repoWeight = repository!.Weight;
                         repository!.Weight -= order.Weight;
                         // STEP 1:
-                        await _wallet.ExchangeLocalWalletAsync(order);
+                        double baseOnlinePrice = await GetBasePrices(order.Weight);
+                        double orderPrice = await GetPrices(CalcTypes.buy, order.Weight, order.Carat);
+                        if (orderPrice == order.CurrentCalculatedPrice)
+                        {
+                            // STEP 1:
+                            order.SourceAmount = orderPrice;
+                            bool isExchanged = await _wallet.ExchangeLocalWalletAsync(order);
 
-                        // STEP 2:
-                        repositoryTransaction.Id = DataBaseHelper.GetPostgreSQLSequenceNextVal(store, "seq_goldrepositorytransactions");
-                        repositoryTransaction.Weight = order.Weight;
-                        repositoryTransaction.RegDate = DateTime.Now;
-                        repositoryTransaction.RegUserId = order.UserId;
-                        repositoryTransaction.GoldRepositoryId = repository.Id;
-                        repositoryTransaction.LastGoldValue = repoWeight;
-                        repositoryTransaction.NewGoldValue = repository.Weight;
-                        repositoryTransaction.Status = 0;
-                        repositoryTransaction.TransactionMode = 2; // Online
-                        repositoryTransaction.TransactionType = 2; // Buy
-                        await store.GoldRepositoryTransactions.AddAsync(repositoryTransaction);
+                            if (isExchanged)
+                            {
+                                // STEP 2:
+                                repositoryTransaction.Id = DataBaseHelper.GetPostgreSQLSequenceNextVal(store, "seq_goldrepositorytransactions");
+                                repositoryTransaction.Weight = order.Weight;
+                                repositoryTransaction.RegDate = DateTime.Now;
+                                repositoryTransaction.RegUserId = order.UserId;
+                                repositoryTransaction.GoldRepositoryId = repository.Id;
+                                repositoryTransaction.LastGoldValue = repoWeight;
+                                repositoryTransaction.NewGoldValue = repository.Weight;
+                                repositoryTransaction.Status = 0;
+                                repositoryTransaction.TransactionMode = 2; // Online
+                                repositoryTransaction.TransactionType = 2; // Buy
+                                await store.GoldRepositoryTransactions.AddAsync(repositoryTransaction);
 
-                        // STEP 3:
-                        store.GoldRepositories.Update(repository);
-                        await store.SaveChangesAsync();
-                        result = true;
+                                // STEP 3:
+                                store.GoldRepositories.Update(repository);
+                                await store.SaveChangesAsync();
+                                response = new ApiResponse();
+                            }
+                            else
+                            {
+                                response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "خطای تراکنش کیف پول" };
+                            }
+                        }
+                        else
+                        {
+                            response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "قیمت انتخاب شده با قیمت بروز مغایرت دارد" };
+                        }
                     }
                 }
-                result = false;
+                else
+                {
+                    response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "موجودی انبار کافی نمی باشد" };
+                }
                 scope.Complete();
-                return result;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 scope.Complete();
-                return result;
+                response = new ApiResponse() { StatusCode = 400, Data = "false", Message = ex.Message };
             }
+            return response;
         }
 
-        public async Task<bool> CheckGoldInventory(int weight, int goldType = 1) => await _store.GoldRepositories.AnyAsync(x => x.Weight < weight && x.GoldType == goldType);
+        public async Task<bool> CheckGoldInventory(int weight, int goldType = 1) => await _store.GoldRepositories.AnyAsync(x => x.Weight > weight && x.GoldType == goldType);
 
         public async Task<double> GetBasePrices(double weight = 0.0)
         {
@@ -105,9 +127,9 @@ namespace GoldStore.BusinessLogics
 
         public async Task<bool> isExistAmountThreshold(long amountId) => await _store.AmountThresholds.AnyAsync(x => x.Id == amountId || x.Status == 1);
 
-        public async Task<bool> Sell(OrderVM order)
+        public async Task<ApiResponse> Sell(OrderVM order)
         {
-            bool result = false;
+            ApiResponse response = new();
             GoldRepository? repository = new();
             using GStoreDbContext? store = _store;
             TransactionOptions scopeOption = new()
@@ -126,37 +148,57 @@ namespace GoldStore.BusinessLogics
                         GoldRepositoryTransaction repositoryTransaction = new();
                         int repoWeight = repository!.Weight;
                         repository!.Weight += order.Weight;
-                        // STEP 1:
-                        await _wallet.ExchangeLocalWalletAsync(order);
+                        double baseOnlinePrice = await GetBasePrices(order.Weight);
+                        double orderPrice = await GetPrices(CalcTypes.sell, order.Weight, order.Carat);
+                        if (orderPrice == order.CurrentCalculatedPrice)
+                        {
+                            // STEP 1:
+                            order.DestinationAmount = orderPrice;
+                            bool isExchanged = await _wallet.ExchangeLocalWalletAsync(order);
 
-                        // STEP 2:
-                        repositoryTransaction.Id = DataBaseHelper.GetPostgreSQLSequenceNextVal(store, "seq_goldrepositorytransactions");
-                        repositoryTransaction.Weight = order.Weight;
-                        repositoryTransaction.RegDate = DateTime.Now;
-                        repositoryTransaction.RegUserId = order.UserId;
-                        repositoryTransaction.GoldRepositoryId = repository.Id;
-                        repositoryTransaction.LastGoldValue = repoWeight;
-                        repositoryTransaction.NewGoldValue = repository.Weight;
-                        repositoryTransaction.Status = 0;
-                        repositoryTransaction.TransactionMode = 2; // Online
-                        repositoryTransaction.TransactionType = 1; // Sell
-                        await store.GoldRepositoryTransactions.AddAsync(repositoryTransaction);
+                            if (isExchanged)
+                            {
+                                // STEP 2:
+                                repositoryTransaction.Id = DataBaseHelper.GetPostgreSQLSequenceNextVal(store, "seq_goldrepositorytransactions");
+                                repositoryTransaction.Weight = order.Weight;
+                                repositoryTransaction.RegDate = DateTime.Now;
+                                repositoryTransaction.RegUserId = order.UserId;
+                                repositoryTransaction.GoldRepositoryId = repository.Id;
+                                repositoryTransaction.LastGoldValue = repoWeight;
+                                repositoryTransaction.NewGoldValue = repository.Weight;
+                                repositoryTransaction.Status = 0;
+                                repositoryTransaction.TransactionMode = 2; // Online
+                                repositoryTransaction.TransactionType = 1; // Sell
+                                await store.GoldRepositoryTransactions.AddAsync(repositoryTransaction);
 
-                        // STEP 3:
-                        store.GoldRepositories.Update(repository);
-                        await store.SaveChangesAsync();
-                        result = true;
+                                // STEP 3:
+                                store.GoldRepositories.Update(repository);
+                                await store.SaveChangesAsync();
+                                response = new ApiResponse();
+                            }
+                            else
+                            {
+                                response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "خطای تراکنش کیف پول" };
+                            }
+                        }
+                        else
+                        {
+                            response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "قیمت انتخاب شده با قیمت بروز مغایرت دارد" };
+                        }
                     }
                 }
-                result = false;
+                else
+                {
+                    response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "موجودی انبار کافی نمی باشد" };
+                }
                 scope.Complete();
-                return result;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 scope.Complete();
-                return result;
+                response = new ApiResponse() { StatusCode = 400, Data = "false", Message = ex.Message };
             }
+            return response;
         }
 
         public async Task UpdateAmountThreshold(AmountThreshold amountThreshold)
@@ -183,59 +225,31 @@ namespace GoldStore.BusinessLogics
                     res = basePrice * carat;
                     break;
                 case CalcTypes.buy:
-                    res = ThresholdsSault(threshold.BuyThreshold, basePrice, calcTypes) * carat;
+                    res = (ThresholdsSault(threshold.BuyThreshold, basePrice) * carat) / 750;
                     break;
                 case CalcTypes.sell:
-                    res = ThresholdsSault(threshold.SelThreshold, basePrice, calcTypes) * carat;
+                    res = (ThresholdsSault(threshold.SelThreshold, basePrice) * carat) / 750;
                     break;
                 default:
+                    res = basePrice * carat;
                     break;
             }
             return res;
         }
 
-        private double ThresholdsSault(double thresholdValue, double basePrice, CalcTypes calcType)
+        private double ThresholdsSault(double thresholdValue, double basePrice)
         {
             double result = 0.0;
-            switch (calcType)
+            if (thresholdValue < 1)
             {
-                case CalcTypes.none:
-                    if (thresholdValue < 1)
-                    {
-                        // Percentage
-                    }
-                    else
-                    {
-                        // Price
-                        result = thresholdValue * basePrice;
-                    }
-                    break;
-                case CalcTypes.buy:
-                    if (thresholdValue < 1)
-                    {
-                        // Percentage
-                    }
-                    else
-                    {
-                        // Price
-                        result = thresholdValue * basePrice;
-                    }
-                    break;
-                case CalcTypes.sell:
-                    if (thresholdValue < 1)
-                    {
-                        // Percentage
-                    }
-                    else
-                    {
-                        // Price
-                        result = thresholdValue * basePrice;
-                    }
-                    break;
-                default:
-                    break;
+                // Percentage
+                result = basePrice + (basePrice * (thresholdValue / 100));
             }
-
+            else
+            {
+                // Price
+                result = thresholdValue + basePrice;
+            }
             return result;
         }
 

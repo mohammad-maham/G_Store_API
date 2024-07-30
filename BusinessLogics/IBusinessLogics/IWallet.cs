@@ -4,6 +4,6 @@ namespace GoldStore.BusinessLogics.IBusinessLogics
 {
     public interface IWallet
     {
-        Task ExchangeLocalWalletAsync(OrderVM order);
+        Task<bool> ExchangeLocalWalletAsync(OrderVM order);
     }
 }

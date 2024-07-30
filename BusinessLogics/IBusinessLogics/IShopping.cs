@@ -1,11 +1,12 @@
-﻿using GoldStore.Models;
+﻿using GoldStore.Errors;
+using GoldStore.Models;
 
 namespace GoldStore.BusinessLogics.IBusinessLogics
 {
     public interface IShopping
     {
-        Task<bool> Buy(OrderVM order);
-        Task<bool> Sell(OrderVM order);
+        Task<ApiResponse> Buy(OrderVM order);
+        Task<ApiResponse> Sell(OrderVM order);
         Task<bool> CheckGoldInventory(int weight, int goldType = 1);
         Task UpdateAmountThreshold(AmountThreshold tresholdVM);
         Task InsertAmountThreshold(AmountThreshold amountThreshold);

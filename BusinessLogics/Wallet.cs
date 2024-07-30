@@ -21,7 +21,7 @@ namespace GoldStore.BusinessLogics
             _config = config;
         }
 
-        public async Task ExchangeLocalWalletAsync(OrderVM order)
+        public async Task<bool> ExchangeLocalWalletAsync(OrderVM order)
         {
             string host = _config!.GetSection("ProjectUrls")["ApiWallet"]!;
 
@@ -37,15 +37,21 @@ namespace GoldStore.BusinessLogics
                 // Headers
                 request.AddHeader("content-type", "application/json");
 
+                request.AddJsonBody(new { order });
+
                 // Send SMS
                 RestResponse response = await client.ExecutePostAsync(request);
 
-                if (response.StatusCode == HttpStatusCode.OK && !string.IsNullOrEmpty(response.Content)) { }
+                if (response.StatusCode == HttpStatusCode.OK && !string.IsNullOrEmpty(response.Content))
+                {
+                    return response.Content == "true" ? true : false;
+                }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
             }
+            return false;
         }
     }
 }

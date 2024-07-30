@@ -11,11 +11,15 @@ namespace GoldStore.Models
         [Display(Name = "شناسه کیف پول"), Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         public long WalleId { get; set; }
         [Display(Name = "آدرس مبدأ"), Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        public string SourceAddress { get; set; } = null!;
+        public long? SourceAddress { get; set; } = 1; // Currency
         [Display(Name = "آدرس مقصد"), Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        public string DestinationAddress { get; set; } = null!;
-        public decimal SourceAmount { get; set; }
-        public decimal DestinationAmount { get; set; }
-        public string? ExchangeData { get; set; } = null!;
+        public long? DestinationAddress { get; set; } = 2; // Gold
+        [Display(Name = "مقدار درخواستی"), Required(ErrorMessage = "لطفا {0} را وارد کنید")]
+        public double SourceAmount { get; set; }
+        public double DestinationAmount { get; set; }
+        [Display(Name = "قیمت لحظه ای"), Required(ErrorMessage = "لطفا {0} را وارد کنید")]
+        public double CurrentCalculatedPrice { get; set; }
+        [Display(Name = "عیار")]
+        public long Carat { get; set; } = 750;
     }
 }
