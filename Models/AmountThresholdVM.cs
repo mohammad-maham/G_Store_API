@@ -26,6 +26,6 @@ namespace GoldStore.Models
         public DateTime ExpireEffectDate { get; set; }
 
         [Display(Name = "قیمت آنلاین"), Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        public int IsOnlinePrice { get; set; }
+        public short IsOnlinePrice { get; set; }
     }
 }

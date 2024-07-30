@@ -1,4 +1,5 @@
-﻿using GoldStore.BusinessLogics.IBusinessLogics;
+﻿using GoldHelpers.Helpers;
+using GoldStore.BusinessLogics.IBusinessLogics;
 using GoldStore.Errors;
 using GoldStore.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +7,7 @@ using Newtonsoft.Json;
 
 namespace GoldStore.Controllers
 {
+    [GoldAuthorize]
     [ApiController]
     [Route("api/[controller]")]
     public class ShoppingController : ControllerBase
@@ -73,14 +75,12 @@ namespace GoldStore.Controllers
         public async Task<IActionResult> GetPrices([FromBody] PriceCalcVM calcVM)
         {
             double price = 0.0;
-            if (calcVM != null)
+            if (calcVM != null && calcVM.GoldWeight > 0)
             {
-                price = await _shopping.GetPrices(calcVM.GoldCalcType, calcVM.GoldWeight, calcVM.GoldCarat);
+                calcVM.GoldCarat = calcVM.GoldCarat == 0 ? 750 : calcVM.GoldCarat;
+                price = await _shopping.GetPrices((CalcTypes)calcVM.GoldCalcType, calcVM.GoldWeight, calcVM.GoldCarat);
                 if (price > 0)
-                {
-                    string jsonData = JsonConvert.SerializeObject(price);
-                    return Ok(new ApiResponse(data: jsonData));
-                }
+                    return Ok(new ApiResponse(data: price.ToString("N0")));
             }
             return BadRequest(new ApiResponse(404));
         }

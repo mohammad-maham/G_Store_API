@@ -10,17 +10,17 @@ public partial class GoldRepositoryTransaction
 
     public short TransactionType { get; set; }
 
-    public decimal LastGoldValue { get; set; }
+    public double LastGoldValue { get; set; }
 
-    public decimal NewGoldValue { get; set; }
+    public double NewGoldValue { get; set; }
 
     public long RegUserId { get; set; }
 
-    public DateTime RegDate { get; set; }
-
-    public decimal Weight { get; set; }
+    public double Weight { get; set; }
 
     public short TransactionMode { get; set; }
 
     public string WalletInfo { get; set; } = null!;
+
+    public DateTime RegDate { get; set; }
 }

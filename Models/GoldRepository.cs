@@ -18,9 +18,9 @@ public partial class GoldRepository
 
     public long RegUserId { get; set; }
 
-    public DateTime RegDate { get; set; }
-
     public short EntityType { get; set; }
 
     public string? CaratologyInfo { get; set; }
+
+    public DateTime RegDate { get; set; }
 }

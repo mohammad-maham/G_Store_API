@@ -214,25 +214,29 @@ namespace GoldStore.BusinessLogics
             }
         }
 
-        public async Task<double> GetPrices(CalcTypes calcTypes, double weight = 0.0, double carat = 750.0)
+        public async Task<double> GetPrices(CalcTypes calcTypes, double weight = 0.0, double carat = 750)
         {
             double res = 0.0;
             double basePrice = await GetBasePrices(weight);
             AmountThreshold? threshold = await GetLastThresholdAmount();
-            switch (calcTypes)
+            if (calcTypes != CalcTypes.none && threshold != null)
             {
-                case CalcTypes.none:
-                    res = basePrice * carat;
-                    break;
-                case CalcTypes.buy:
-                    res = (ThresholdsSault(threshold.BuyThreshold, basePrice) * carat) / 750;
-                    break;
-                case CalcTypes.sell:
-                    res = (ThresholdsSault(threshold.SelThreshold, basePrice) * carat) / 750;
-                    break;
-                default:
-                    res = basePrice * carat;
-                    break;
+                switch (calcTypes)
+                {
+                    case CalcTypes.buy:
+                        res = (ThresholdsSault(threshold.BuyThreshold, basePrice) * carat) / 750;
+                        break;
+                    case CalcTypes.sell:
+                        res = (ThresholdsSault(threshold.SelThreshold, basePrice) * carat) / 750;
+                        break;
+                    default:
+                        res = basePrice * carat;
+                        break;
+                }
+            }
+            else
+            {
+                res = (basePrice * carat) / 750;
             }
             return res;
         }
@@ -333,6 +337,7 @@ namespace GoldStore.BusinessLogics
                 }
                 else
                 {
+                    threshold = new();
                     threshold!.ExpireEffectDate = thresholdVM.ExpireEffectDate;
                     threshold.CurrentPrice = thresholdVM.CurrentPrice;
                     threshold.IsOnlinePrice = thresholdVM.IsOnlinePrice;

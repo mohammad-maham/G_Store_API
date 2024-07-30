@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace GoldStore.Models;
+﻿namespace GoldStore.Models;
 
 public partial class Status
 {

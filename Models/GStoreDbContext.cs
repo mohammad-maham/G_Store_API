@@ -13,6 +13,10 @@ public partial class GStoreDbContext : DbContext
     {
     }
 
+    public virtual DbSet<AmountThreshold> AmountThresholds { get; set; }
+
+    public virtual DbSet<ArchiveAmountThreshold> ArchiveAmountThresholds { get; set; }
+
     public virtual DbSet<GoldEntity> GoldEntities { get; set; }
 
     public virtual DbSet<GoldRepository> GoldRepositories { get; set; }
@@ -35,15 +39,9 @@ public partial class GStoreDbContext : DbContext
 
     public virtual DbSet<Unit> Units { get; set; }
 
-    public virtual DbSet<AmountThreshold> AmountThresholds { get; set; }
-
-    public virtual DbSet<ArchiveAmountThreshold> ArchiveAmountThresholds { get; set; }
-
-
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseNpgsql("Host=194.60.231.81:5432;Database=G_Store_DB;Username=postgres;Password=Maham@7796",
-            x => x.UseNodaTime());
+        optionsBuilder.UseNpgsql("Host=194.60.231.81:5432;Database=G_Store_DB;Username=postgres;Password=Maham@7796", x => x.UseNodaTime());
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
         AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
     }
@@ -56,7 +54,9 @@ public partial class GStoreDbContext : DbContext
 
             entity.ToTable("AmountThreshold");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id)
+                .UseIdentityAlwaysColumn()
+                .HasIdentityOptions(null, null, 1000000000L, 1000000000000000000L, null, null);
         });
 
         modelBuilder.Entity<ArchiveAmountThreshold>(entity =>
