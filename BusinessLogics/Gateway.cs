@@ -1,4 +1,6 @@
 ﻿using GoldStore.BusinessLogics.IBusinessLogics;
+using GoldStore.Errors;
+using Newtonsoft.Json;
 using RestSharp;
 using System.Net;
 
@@ -41,7 +43,10 @@ namespace GoldStore.BusinessLogics
                 RestResponse response = await client.ExecutePostAsync(request);
 
                 if (response.StatusCode == HttpStatusCode.OK && !string.IsNullOrEmpty(response.Content))
-                    onlinePrice = double.Parse(response.Content);
+                {
+                    ApiResponse apiResponse = JsonConvert.DeserializeObject<ApiResponse>(response.Content)!;
+                    onlinePrice = double.Parse(apiResponse.Data ?? "0");
+                }
             }
             catch (Exception e)
             {
