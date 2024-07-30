@@ -8,21 +8,24 @@ namespace GoldStore.BusinessLogics
 {
     public class Shopping : IShopping
     {
-        private readonly ILogger<Shopping>? _logger;
-        private readonly GStoreDbContext _store;
         private readonly IGateway _gateway;
+        private readonly IWallet _wallet;
+        private readonly GStoreDbContext _store;
+        private readonly ILogger<Shopping>? _logger;
 
         public Shopping()
         {
             _store = new GStoreDbContext();
             _gateway = new Gateway();
+            _wallet = new Wallet();
         }
 
-        public Shopping(ILogger<Shopping> logger, GStoreDbContext store, IGateway gateway)
+        public Shopping(ILogger<Shopping> logger, GStoreDbContext store, IGateway gateway, IWallet wallet)
         {
             _logger = logger;
             _store = store;
             _gateway = gateway;
+            _wallet = wallet;
         }
 
         public async Task<bool> Buy(OrderVM order)
@@ -47,7 +50,7 @@ namespace GoldStore.BusinessLogics
                         int repoWeight = repository!.Weight;
                         repository!.Weight -= order.Weight;
                         // STEP 1:
-                        // Wallet Exchange Transaction
+                        await _wallet.ExchangeLocalWalletAsync(order);
 
                         // STEP 2:
                         repositoryTransaction.Id = DataBaseHelper.GetPostgreSQLSequenceNextVal(store, "seq_goldrepositorytransactions");
@@ -124,7 +127,7 @@ namespace GoldStore.BusinessLogics
                         int repoWeight = repository!.Weight;
                         repository!.Weight += order.Weight;
                         // STEP 1:
-                        // Wallet Exchange Transaction
+                        await _wallet.ExchangeLocalWalletAsync(order);
 
                         // STEP 2:
                         repositoryTransaction.Id = DataBaseHelper.GetPostgreSQLSequenceNextVal(store, "seq_goldrepositorytransactions");

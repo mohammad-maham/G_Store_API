@@ -16,6 +16,6 @@ namespace GoldStore.Models
         public string DestinationAddress { get; set; } = null!;
         public decimal SourceAmount { get; set; }
         public decimal DestinationAmount { get; set; }
-        public string? XchangeData { get; set; } = null!;
+        public string? ExchangeData { get; set; } = null!;
     }
 }

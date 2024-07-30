@@ -1,34 +1,34 @@
 ﻿using GoldStore.BusinessLogics.IBusinessLogics;
+using GoldStore.Models;
 using RestSharp;
 using System.Net;
 
 namespace GoldStore.BusinessLogics
 {
-    public class Gateway : IGateway
+    public class Wallet : IWallet
     {
-        private readonly ILogger<Gateway>? _logger;
+        private readonly ILogger<Wallet>? _logger;
         private readonly IConfiguration? _config;
 
-        public Gateway()
+        public Wallet()
         {
             _config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json").Build();
         }
 
-        public Gateway(ILogger<Gateway> logger, IConfiguration config)
+        public Wallet(ILogger<Wallet> logger, IConfiguration config)
         {
             _logger = logger;
             _config = config;
         }
 
-        public async Task<double> GetOnlineGoldPriceAsync()
+        public async Task ExchangeLocalWalletAsync(OrderVM order)
         {
-            double onlinePrice = 0.0;
-            string host = _config!.GetSection("ProjectUrls")["ApiGateway"]!;
+            string host = _config!.GetSection("ProjectUrls")["ApiWallet"]!;
 
             try
             {
                 // BaseURL
-                RestClient client = new($"{host}/api/Prices/GetGoldOnlinePrice");
+                RestClient client = new($"{host}/api/Fund/ExChange");
                 RestRequest request = new()
                 {
                     Method = Method.Post
@@ -40,14 +40,12 @@ namespace GoldStore.BusinessLogics
                 // Send SMS
                 RestResponse response = await client.ExecutePostAsync(request);
 
-                if (response.StatusCode == HttpStatusCode.OK && !string.IsNullOrEmpty(response.Content))
-                    onlinePrice = double.Parse(response.Content);
+                if (response.StatusCode == HttpStatusCode.OK && !string.IsNullOrEmpty(response.Content)) { }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
             }
-            return onlinePrice;
         }
     }
 }
