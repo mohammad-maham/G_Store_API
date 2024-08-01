@@ -42,7 +42,7 @@ namespace GoldStore.BusinessLogics
             using TransactionScope scope = new(TransactionScopeOption.RequiresNew, scopeOption, TransactionScopeAsyncFlowOption.Enabled);
             try
             {
-                if (await CheckGoldInventory(order.Weight))
+                if (await CheckGoldInventory(order.Weight, order.GoldType))
                 {
                     repository = store.GoldRepositories.FirstOrDefault(r => r.Weight > order.Weight);
                     if (repository != null && repository.Id != 0)

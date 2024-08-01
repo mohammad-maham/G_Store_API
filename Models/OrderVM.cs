@@ -21,5 +21,6 @@ namespace GoldStore.Models
         public double CurrentCalculatedPrice { get; set; }
         [Display(Name = "عیار")]
         public long Carat { get; set; } = 750;
+        public int GoldType { get; set; } = 2;
     }
 }
