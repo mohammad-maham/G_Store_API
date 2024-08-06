@@ -21,7 +21,7 @@ namespace GoldStore.BusinessLogics
             _config = config;
         }
 
-        public async Task<bool> ExchangeLocalWalletAsync(OrderVM order)
+        public bool ExchangeLocalWallet(OrderVM order)
         {
             string host = _config!.GetSection("ProjectUrls")["ApiWallet"]!;
 
@@ -40,7 +40,7 @@ namespace GoldStore.BusinessLogics
                 request.AddJsonBody(new { order });
 
                 // Send SMS
-                RestResponse response = await client.ExecutePostAsync(request);
+                RestResponse response = client.ExecutePost(request);
 
                 if (response.StatusCode == HttpStatusCode.OK && !string.IsNullOrEmpty(response.Content))
                 {

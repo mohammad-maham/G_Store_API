@@ -5,17 +5,17 @@ namespace GoldStore.BusinessLogics.IBusinessLogics
 {
     public interface IShopping
     {
-        Task<ApiResponse> Buy(OrderVM order);
-        Task<ApiResponse> Sell(OrderVM order);
-        Task<bool> CheckGoldInventory(int weight, int goldType = 1);
-        Task UpdateAmountThreshold(AmountThreshold tresholdVM);
-        Task InsertAmountThreshold(AmountThreshold amountThreshold);
-        Task<bool> isExistAmountThreshold(long amountId);
-        Task<double> GetBasePrices(double weight = 0.0);
-        Task<double> GetPrices(CalcTypes calcTypes, double weight = 0.0, double carat = 750.0);
-        Task<AmountThreshold> GetLastThresholdAmount();
-        Task<GoldRepository> ChargeGoldRepository(ChargeStore chargeStore);
-        Task InsertSupervisorThresholds(AmountThresholdVM thresholdVM);
-        Task<AmountThreshold> GetAmountThreshold(long thresholdId);
+        ApiResponse Buy(OrderVM order);
+        ApiResponse Sell(OrderVM order);
+        bool CheckGoldInventory(int weight, int goldType = 1);
+        void UpdateAmountThreshold(AmountThreshold tresholdVM);
+        void InsertAmountThreshold(AmountThreshold amountThreshold);
+        bool isExistAmountThreshold(long amountId);
+        double GetBasePrices(double weight = 0.0);
+        double GetPrices(CalcTypes calcTypes, double weight = 0.0, double carat = 750.0);
+        AmountThreshold GetLastThresholdAmount();
+        GoldRepository ChargeGoldRepository(ChargeStore chargeStore);
+        void InsertSupervisorThresholds(AmountThresholdVM thresholdVM);
+        AmountThreshold GetAmountThreshold(long thresholdId);
     }
 }

@@ -2,7 +2,6 @@
 using GoldStore.Errors;
 using GoldStore.Helpers;
 using GoldStore.Models;
-using Microsoft.EntityFrameworkCore;
 using System.Transactions;
 
 namespace GoldStore.BusinessLogics
@@ -29,7 +28,7 @@ namespace GoldStore.BusinessLogics
             _wallet = wallet;
         }
 
-        public async Task<ApiResponse> Buy(OrderVM order)
+        public ApiResponse Buy(OrderVM order)
         {
             ApiResponse response = new();
             GoldRepository? repository = new();
@@ -42,7 +41,7 @@ namespace GoldStore.BusinessLogics
             using TransactionScope scope = new(TransactionScopeOption.RequiresNew, scopeOption, TransactionScopeAsyncFlowOption.Enabled);
             try
             {
-                if (await CheckGoldInventory(order.Weight, order.GoldType))
+                if (CheckGoldInventory(order.Weight, order.GoldType))
                 {
                     repository = store.GoldRepositories.FirstOrDefault(r => r.Weight > order.Weight);
                     if (repository != null && repository.Id != 0)
@@ -51,13 +50,13 @@ namespace GoldStore.BusinessLogics
                         int repoWeight = repository!.Weight;
                         repository!.Weight -= order.Weight;
                         // STEP 1:
-                        double baseOnlinePrice = await GetBasePrices(order.Weight);
-                        double orderPrice = await GetPrices(CalcTypes.buy, order.Weight, order.Carat);
+                        double baseOnlinePrice = GetBasePrices(order.Weight);
+                        double orderPrice = GetPrices(CalcTypes.buy, order.Weight, order.Carat);
                         if (orderPrice == order.CurrentCalculatedPrice)
                         {
                             // STEP 1:
                             order.SourceAmount = orderPrice;
-                            bool isExchanged = await _wallet.ExchangeLocalWalletAsync(order);
+                            bool isExchanged = _wallet.ExchangeLocalWallet(order);
 
                             if (isExchanged)
                             {
@@ -72,11 +71,11 @@ namespace GoldStore.BusinessLogics
                                 repositoryTransaction.Status = 0;
                                 repositoryTransaction.TransactionMode = 2; // Online
                                 repositoryTransaction.TransactionType = 2; // Buy
-                                await store.GoldRepositoryTransactions.AddAsync(repositoryTransaction);
+                                store.GoldRepositoryTransactions.Add(repositoryTransaction);
 
                                 // STEP 3:
                                 store.GoldRepositories.Update(repository);
-                                await store.SaveChangesAsync();
+                                store.SaveChanges();
                                 response = new ApiResponse();
                             }
                             else
@@ -104,30 +103,36 @@ namespace GoldStore.BusinessLogics
             return response;
         }
 
-        public async Task<bool> CheckGoldInventory(int weight, int goldType = 1) => await _store.GoldRepositories.AnyAsync(x => x.Weight > weight && x.GoldType == goldType);
-
-        public async Task<double> GetBasePrices(double weight = 0.0)
+        public bool CheckGoldInventory(int weight, int goldType = 1)
         {
-            double onlinePrice = await _gateway.GetOnlineGoldPriceAsync();
+            return _store.GoldRepositories.Any(x => x.Weight > weight && x.GoldType == goldType);
+        }
+
+        public double GetBasePrices(double weight = 0.0)
+        {
+            double onlinePrice = _gateway.GetOnlineGoldPrice();
             return onlinePrice * weight;
         }
 
-        public async Task InsertAmountThreshold(AmountThreshold amountThreshold)
+        public void InsertAmountThreshold(AmountThreshold amountThreshold)
         {
             if (amountThreshold != null && amountThreshold.SelThreshold != 0 && amountThreshold.BuyThreshold != 0)
             {
-                bool isExist = await isExistAmountThreshold(amountThreshold.Id);
+                bool isExist = isExistAmountThreshold(amountThreshold.Id);
                 if (!isExist)
                 {
-                    await _store.AmountThresholds.AddAsync(amountThreshold);
-                    await _store.SaveChangesAsync();
+                    _store.AmountThresholds.Add(amountThreshold);
+                    _store.SaveChanges();
                 }
             }
         }
 
-        public async Task<bool> isExistAmountThreshold(long amountId) => await _store.AmountThresholds.AnyAsync(x => x.Id == amountId || x.Status == 1);
+        public bool isExistAmountThreshold(long amountId)
+        {
+            return _store.AmountThresholds.Any(x => x.Id == amountId || x.Status == 1);
+        }
 
-        public async Task<ApiResponse> Sell(OrderVM order)
+        public ApiResponse Sell(OrderVM order)
         {
             ApiResponse response = new();
             GoldRepository? repository = new();
@@ -140,7 +145,7 @@ namespace GoldStore.BusinessLogics
             using TransactionScope scope = new(TransactionScopeOption.RequiresNew, scopeOption, TransactionScopeAsyncFlowOption.Enabled);
             try
             {
-                if (await CheckGoldInventory(order.Weight))
+                if (CheckGoldInventory(order.Weight))
                 {
                     repository = store.GoldRepositories.FirstOrDefault(r => r.Weight <= order.Weight);
                     if (repository != null && repository.Id != 0)
@@ -148,13 +153,13 @@ namespace GoldStore.BusinessLogics
                         GoldRepositoryTransaction repositoryTransaction = new();
                         int repoWeight = repository!.Weight;
                         repository!.Weight += order.Weight;
-                        double baseOnlinePrice = await GetBasePrices(order.Weight);
-                        double orderPrice = await GetPrices(CalcTypes.sell, order.Weight, order.Carat);
+                        double baseOnlinePrice = GetBasePrices(order.Weight);
+                        double orderPrice = GetPrices(CalcTypes.sell, order.Weight, order.Carat);
                         if (orderPrice == order.CurrentCalculatedPrice)
                         {
                             // STEP 1:
                             order.DestinationAmount = orderPrice;
-                            bool isExchanged = await _wallet.ExchangeLocalWalletAsync(order);
+                            bool isExchanged = _wallet.ExchangeLocalWallet(order);
 
                             if (isExchanged)
                             {
@@ -169,11 +174,11 @@ namespace GoldStore.BusinessLogics
                                 repositoryTransaction.Status = 0;
                                 repositoryTransaction.TransactionMode = 2; // Online
                                 repositoryTransaction.TransactionType = 1; // Sell
-                                await store.GoldRepositoryTransactions.AddAsync(repositoryTransaction);
+                                store.GoldRepositoryTransactions.Add(repositoryTransaction);
 
                                 // STEP 3:
                                 store.GoldRepositories.Update(repository);
-                                await store.SaveChangesAsync();
+                                store.SaveChanges();
                                 response = new ApiResponse();
                             }
                             else
@@ -201,43 +206,32 @@ namespace GoldStore.BusinessLogics
             return response;
         }
 
-        public async Task UpdateAmountThreshold(AmountThreshold amountThreshold)
+        public void UpdateAmountThreshold(AmountThreshold amountThreshold)
         {
             if (amountThreshold != null && amountThreshold.Id != 0)
             {
-                bool isExist = await isExistAmountThreshold(amountThreshold.Id);
+                bool isExist = isExistAmountThreshold(amountThreshold.Id);
                 if (isExist)
                 {
                     _store.AmountThresholds.Update(amountThreshold);
-                    await _store.SaveChangesAsync();
+                    _store.SaveChanges();
                 }
             }
         }
 
-        public async Task<double> GetPrices(CalcTypes calcTypes, double weight = 0.0, double carat = 750)
+        public double GetPrices(CalcTypes calcTypes, double weight = 0.0, double carat = 750)
         {
             double res = 0.0;
-            double basePrice = await GetBasePrices(weight);
-            AmountThreshold? threshold = await GetLastThresholdAmount();
-            if (calcTypes != CalcTypes.none && threshold != null)
-            {
-                switch (calcTypes)
+            double basePrice = GetBasePrices(weight);
+            AmountThreshold? threshold = GetLastThresholdAmount();
+            res = calcTypes != CalcTypes.none && threshold != null
+                ? calcTypes switch
                 {
-                    case CalcTypes.buy:
-                        res = (ThresholdsSault(threshold.BuyThreshold, basePrice) * carat) / 750;
-                        break;
-                    case CalcTypes.sell:
-                        res = (ThresholdsSault(threshold.SelThreshold, basePrice) * carat) / 750;
-                        break;
-                    default:
-                        res = basePrice * carat;
-                        break;
+                    CalcTypes.buy => ThresholdsSault(threshold.BuyThreshold, basePrice) * carat / 750,
+                    CalcTypes.sell => ThresholdsSault(threshold.SelThreshold, basePrice) * carat / 750,
+                    _ => basePrice * carat,
                 }
-            }
-            else
-            {
-                res = (basePrice * carat) / 750;
-            }
+                : basePrice * carat / 750;
             return res;
         }
 
@@ -257,14 +251,17 @@ namespace GoldStore.BusinessLogics
             return result;
         }
 
-        public async Task<AmountThreshold> GetLastThresholdAmount() => await _store.AmountThresholds.FirstOrDefaultAsync(x => x.Status == 1 && x.BuyThreshold != 0 && x.SelThreshold != 0);
+        public AmountThreshold GetLastThresholdAmount()
+        {
+            return _store.AmountThresholds.FirstOrDefault(x => x.Status == 1 && x.BuyThreshold != 0 && x.SelThreshold != 0);
+        }
 
-        public async Task<GoldRepository> ChargeGoldRepository(ChargeStore chargeStore)
+        public GoldRepository ChargeGoldRepository(ChargeStore chargeStore)
         {
 
-            GoldRepository? repo = await _store
+            GoldRepository? repo = _store
                 .GoldRepositories
-                .FirstOrDefaultAsync(x => x.Carat == chargeStore.Carat && x.Status == 1 && x.GoldType == chargeStore.GoldType);
+                .FirstOrDefault(x => x.Carat == chargeStore.Carat && x.Status == 1 && x.GoldType == chargeStore.GoldType);
 
             if (repo != null)
             {
@@ -277,7 +274,7 @@ namespace GoldStore.BusinessLogics
                 repo.RegUserId = chargeStore.RegUserId;
                 repo.GoldType = chargeStore.GoldType;
                 _store.GoldRepositories.Update(repo);
-                await _store.SaveChangesAsync();
+                _store.SaveChanges();
             }
             else
             {
@@ -290,22 +287,22 @@ namespace GoldStore.BusinessLogics
                 repo.EntityType = chargeStore.EntityType;
                 repo.RegUserId = chargeStore.RegUserId;
                 repo.GoldType = chargeStore.GoldType;
-                await _store.GoldRepositories.AddAsync(repo);
-                await _store.SaveChangesAsync();
+                _store.GoldRepositories.Add(repo);
+                _store.SaveChanges();
             }
             return repo;
         }
 
-        public async Task InsertSupervisorThresholds(AmountThresholdVM thresholdVM)
+        public void InsertSupervisorThresholds(AmountThresholdVM thresholdVM)
         {
             AmountThreshold? threshold = new();
-            double onlinePrice = await _gateway.GetOnlineGoldPriceAsync();
+            double onlinePrice = _gateway.GetOnlineGoldPrice();
             thresholdVM.CurrentPrice = thresholdVM.IsOnlinePrice == 1 ? onlinePrice : thresholdVM.CurrentPrice;
 
             if (thresholdVM.Id != 0)
             {
-                threshold = await _store.AmountThresholds
-                    .FirstOrDefaultAsync(x => x.Id == thresholdVM.Id && x.Status == 1 && x.RegUserId != 0);
+                threshold = _store.AmountThresholds
+                    .FirstOrDefault(x => x.Id == thresholdVM.Id && x.Status == 1 && x.RegUserId != 0);
 
                 if (thresholdVM != null)
                 {
@@ -317,12 +314,12 @@ namespace GoldStore.BusinessLogics
                     threshold.SelThreshold = thresholdVM.SelThreshold;
                     threshold.RegUserId = thresholdVM.RegUserId;
                     _store.AmountThresholds.Update(threshold);
-                    await _store.SaveChangesAsync();
+                    _store.SaveChanges();
                 }
             }
             else
             {
-                threshold = await _store.AmountThresholds.FirstOrDefaultAsync();
+                threshold = _store.AmountThresholds.FirstOrDefault();
                 if (threshold != null && threshold.Id != 0)
                 {
                     threshold.ExpireEffectDate = thresholdVM.ExpireEffectDate;
@@ -333,7 +330,7 @@ namespace GoldStore.BusinessLogics
                     threshold.SelThreshold = thresholdVM.SelThreshold;
                     threshold.RegUserId = thresholdVM.RegUserId;
                     _store.AmountThresholds.Update(threshold);
-                    await _store.SaveChangesAsync();
+                    _store.SaveChanges();
                 }
                 else
                 {
@@ -346,18 +343,21 @@ namespace GoldStore.BusinessLogics
                     threshold.SelThreshold = thresholdVM.SelThreshold;
                     threshold.RegUserId = thresholdVM.RegUserId;
                     threshold.RegDate = DateTime.Now;
-                    await _store.AmountThresholds.AddAsync(threshold);
-                    await _store.SaveChangesAsync();
+                    _store.AmountThresholds.Add(threshold);
+                    _store.SaveChanges();
                 }
             }
         }
 
-        public async Task<AmountThreshold> GetAmountThreshold(long thresholdId)
+        public AmountThreshold GetAmountThreshold(long thresholdId)
         {
             AmountThreshold? amountThreshold = new();
-            amountThreshold = await _store.AmountThresholds.FirstOrDefaultAsync(x => x.Id == thresholdId && x.Status == 1);
+            amountThreshold = _store.AmountThresholds.FirstOrDefault(x => x.Id == thresholdId && x.Status == 1);
             if (amountThreshold == null || amountThreshold.Id == 0)
-                amountThreshold = await _store.AmountThresholds.FirstOrDefaultAsync(x => x.RegUserId == 0 && x.Status == 1);
+            {
+                amountThreshold = _store.AmountThresholds.FirstOrDefault(x => x.RegUserId == 0 && x.Status == 1);
+            }
+
             return amountThreshold;
         }
     }

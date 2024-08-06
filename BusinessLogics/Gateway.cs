@@ -22,7 +22,7 @@ namespace GoldStore.BusinessLogics
             _config = config;
         }
 
-        public async Task<double> GetOnlineGoldPriceAsync()
+        public double GetOnlineGoldPrice()
         {
             double onlinePrice = 0.0;
             string host = _config!.GetSection("ProjectUrls")["ApiGateway"]!;
@@ -40,7 +40,7 @@ namespace GoldStore.BusinessLogics
                 request.AddHeader("content-type", "application/json");
 
                 // Send SMS
-                RestResponse response = await client.ExecutePostAsync(request);
+                RestResponse response = client.ExecutePost(request);
 
                 if (response.StatusCode == HttpStatusCode.OK && !string.IsNullOrEmpty(response.Content))
                 {

@@ -23,11 +23,11 @@ namespace GoldStore.Controllers
 
         [HttpPost]
         [Route("[action]")]
-        public async Task<IActionResult> Buy([FromBody] OrderVM order)
+        public IActionResult Buy([FromBody] OrderVM order)
         {
             if (order != null && order.Weight > 0 && order.UserId != 0)
             {
-                ApiResponse response = await _shopping.Buy(order);
+                ApiResponse response = _shopping.Buy(order);
                 return Ok(response);
             }
             return BadRequest(new ApiResponse(404));
@@ -35,11 +35,11 @@ namespace GoldStore.Controllers
 
         [HttpPost]
         [Route("[action]")]
-        public async Task<IActionResult> Sell([FromBody] OrderVM order)
+        public IActionResult Sell([FromBody] OrderVM order)
         {
             if (order != null && order.Weight != 0 && order.UserId != 0)
             {
-                ApiResponse response = await _shopping.Sell(order);
+                ApiResponse response = _shopping.Sell(order);
                 return Ok(response);
             }
             return BadRequest(new ApiResponse(404));
@@ -72,26 +72,28 @@ namespace GoldStore.Controllers
 
         [HttpPost]
         [Route("[action]")]
-        public async Task<IActionResult> GetPrices([FromBody] PriceCalcVM calcVM)
+        public IActionResult GetPrices([FromBody] PriceCalcVM calcVM)
         {
             double price = 0.0;
             if (calcVM != null && calcVM.GoldWeight > 0)
             {
                 calcVM.GoldCarat = calcVM.GoldCarat == 0 ? 750 : calcVM.GoldCarat;
-                price = await _shopping.GetPrices((CalcTypes)calcVM.GoldCalcType, calcVM.GoldWeight, calcVM.GoldCarat);
+                price = _shopping.GetPrices((CalcTypes)calcVM.GoldCalcType, calcVM.GoldWeight, calcVM.GoldCarat);
                 if (price > 0)
+                {
                     return Ok(new ApiResponse(data: price.ToString("N0")));
+                }
             }
             return BadRequest(new ApiResponse(404));
         }
 
         [HttpPost]
         [Route("[action]")]
-        public async Task<IActionResult> ChargeStore([FromBody] ChargeStore chargeStore)
+        public IActionResult ChargeStore([FromBody] ChargeStore chargeStore)
         {
             if (chargeStore != null && chargeStore.Weight > 0)
             {
-                GoldRepository? goldRepository = await _shopping.ChargeGoldRepository(chargeStore);
+                GoldRepository? goldRepository = _shopping.ChargeGoldRepository(chargeStore);
                 string jsonData = JsonConvert.SerializeObject(goldRepository);
                 return Ok(new ApiResponse(data: jsonData));
             }
@@ -100,11 +102,11 @@ namespace GoldStore.Controllers
 
         [HttpPost]
         [Route("[action]")]
-        public async Task<IActionResult> InsertThreshold([FromBody] AmountThresholdVM threshold)
+        public IActionResult InsertThreshold([FromBody] AmountThresholdVM threshold)
         {
             if (threshold != null && threshold.RegUserId != 0)
             {
-                await _shopping.InsertSupervisorThresholds(threshold);
+                _shopping.InsertSupervisorThresholds(threshold);
                 return Ok(new ApiResponse());
             }
             return BadRequest(new ApiResponse(404));
@@ -112,11 +114,11 @@ namespace GoldStore.Controllers
 
         [HttpPost]
         [Route("[action]")]
-        public async Task<IActionResult> GetThreshold([FromBody] AmountThresholdVM threshold)
+        public IActionResult GetThreshold([FromBody] AmountThresholdVM threshold)
         {
             if (threshold != null && threshold.Id != 0)
             {
-                AmountThreshold? amountThreshold = await _shopping.GetAmountThreshold(threshold.Id);
+                AmountThreshold? amountThreshold = _shopping.GetAmountThreshold(threshold.Id);
                 string jsonData = JsonConvert.SerializeObject(amountThreshold);
                 return Ok(new ApiResponse(data: jsonData));
             }
