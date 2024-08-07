@@ -4,6 +4,6 @@ namespace GoldStore.BusinessLogics.IBusinessLogics
 {
     public interface IWallet
     {
-        bool ExchangeLocalWallet(OrderVM order);
+        bool ExchangeLocalWallet(WalletTransactionVM wallet);
     }
 }

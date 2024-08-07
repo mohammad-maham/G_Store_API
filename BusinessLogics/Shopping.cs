@@ -52,11 +52,17 @@ namespace GoldStore.BusinessLogics
                         // STEP 1:
                         double baseOnlinePrice = GetBasePrices(order.Weight);
                         double orderPrice = GetPrices(CalcTypes.buy, order.Weight, order.Carat);
-                        if (orderPrice == order.CurrentCalculatedPrice)
+                        if (orderPrice == order.CurrentCalculatedPrice && order.SourceWalletCurrency != 0 && order.DestinationWalletCurrency != 0)
                         {
                             // STEP 1:
-                            order.SourceAmount = orderPrice;
-                            bool isExchanged = _wallet.ExchangeLocalWallet(order);
+                            WalletTransactionVM wallet = new();
+                            wallet.SourceAmount = orderPrice;
+                            wallet.DestinationAmout = order.DestinationAmount;
+                            wallet.SourceWalletCurrency = order.SourceWalletCurrency;
+                            wallet.DestinationWalletCurrency = order.DestinationWalletCurrency;
+                            wallet.WalletId = order.WalleId;
+                            wallet.RegUserId = order.UserId;
+                            bool isExchanged = _wallet.ExchangeLocalWallet(wallet);
 
                             if (isExchanged)
                             {
@@ -155,11 +161,17 @@ namespace GoldStore.BusinessLogics
                         repository!.Weight += order.Weight;
                         double baseOnlinePrice = GetBasePrices(order.Weight);
                         double orderPrice = GetPrices(CalcTypes.sell, order.Weight, order.Carat);
-                        if (orderPrice == order.CurrentCalculatedPrice)
+                        if (orderPrice == order.CurrentCalculatedPrice && order.SourceWalletCurrency != 0 && order.DestinationWalletCurrency != 0)
                         {
                             // STEP 1:
+                            WalletTransactionVM wallet = new();
+                            wallet.SourceAmount = order.SourceAmount;
                             order.DestinationAmount = orderPrice;
-                            bool isExchanged = _wallet.ExchangeLocalWallet(order);
+                            wallet.SourceWalletCurrency = order.SourceWalletCurrency;
+                            wallet.DestinationWalletCurrency = order.DestinationWalletCurrency;
+                            wallet.WalletId = order.WalleId;
+                            wallet.RegUserId = order.UserId;
+                            bool isExchanged = _wallet.ExchangeLocalWallet(wallet);
 
                             if (isExchanged)
                             {

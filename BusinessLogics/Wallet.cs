@@ -21,7 +21,7 @@ namespace GoldStore.BusinessLogics
             _config = config;
         }
 
-        public bool ExchangeLocalWallet(OrderVM order)
+        public bool ExchangeLocalWallet(WalletTransactionVM wallet)
         {
             string host = _config!.GetSection("ProjectUrls")["ApiWallet"]!;
 
@@ -37,7 +37,7 @@ namespace GoldStore.BusinessLogics
                 // Headers
                 request.AddHeader("content-type", "application/json");
 
-                request.AddJsonBody(new { order });
+                request.AddJsonBody(new { wallet });
 
                 // Send SMS
                 RestResponse response = client.ExecutePost(request);
