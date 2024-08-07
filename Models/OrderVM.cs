@@ -28,9 +28,8 @@ namespace GoldStore.Models
 
     public class WalletTransactionVM
     {
-        public long? Id { get; set; }
-        public string? SourceAddress { get; set; }
-        public string? DestinationAddress { get; set; }
+        public string? SourceAddress { get; set; } = "1";
+        public string? DestinationAddress { get; set; } = "2";
         public int? SourceWalletCurrency { get; set; } = 1; // Currency
         public int? DestinationWalletCurrency { get; set; } = 2; // Gold
         public double SourceAmount { get; set; }

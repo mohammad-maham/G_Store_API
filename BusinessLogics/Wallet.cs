@@ -37,14 +37,14 @@ namespace GoldStore.BusinessLogics
                 // Headers
                 request.AddHeader("content-type", "application/json");
 
-                request.AddJsonBody(new { wallet });
+                request.AddJsonBody(wallet);
 
                 // Send SMS
                 RestResponse response = client.ExecutePost(request);
 
                 if (response.StatusCode == HttpStatusCode.OK && !string.IsNullOrEmpty(response.Content))
                 {
-                    return response.Content == "true" ? true : false;
+                    return response.Content.Contains("true");
                 }
             }
             catch (Exception e)

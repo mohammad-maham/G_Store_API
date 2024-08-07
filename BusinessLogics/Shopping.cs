@@ -2,6 +2,7 @@
 using GoldStore.Errors;
 using GoldStore.Helpers;
 using GoldStore.Models;
+using Newtonsoft.Json;
 using System.Transactions;
 
 namespace GoldStore.BusinessLogics
@@ -60,8 +61,12 @@ namespace GoldStore.BusinessLogics
                             wallet.DestinationAmout = order.DestinationAmount;
                             wallet.SourceWalletCurrency = order.SourceWalletCurrency;
                             wallet.DestinationWalletCurrency = order.DestinationWalletCurrency;
+                            wallet.SourceAddress = order.SourceAddress;
+                            wallet.DestinationAddress = order.DestinationAddress;
                             wallet.WalletId = order.WalleId;
                             wallet.RegUserId = order.UserId;
+
+                            // Perform Wallet Exchange
                             bool isExchanged = _wallet.ExchangeLocalWallet(wallet);
 
                             if (isExchanged)
@@ -77,6 +82,7 @@ namespace GoldStore.BusinessLogics
                                 repositoryTransaction.Status = 0;
                                 repositoryTransaction.TransactionMode = 2; // Online
                                 repositoryTransaction.TransactionType = 2; // Buy
+                                repositoryTransaction.WalletInfo = JsonConvert.SerializeObject(wallet);
                                 store.GoldRepositoryTransactions.Add(repositoryTransaction);
 
                                 // STEP 3:
@@ -169,8 +175,12 @@ namespace GoldStore.BusinessLogics
                             order.DestinationAmount = orderPrice;
                             wallet.SourceWalletCurrency = order.SourceWalletCurrency;
                             wallet.DestinationWalletCurrency = order.DestinationWalletCurrency;
+                            wallet.SourceAddress = order.SourceAddress;
+                            wallet.DestinationAddress = order.DestinationAddress;
                             wallet.WalletId = order.WalleId;
                             wallet.RegUserId = order.UserId;
+
+                            // Perform Wallet Exchange
                             bool isExchanged = _wallet.ExchangeLocalWallet(wallet);
 
                             if (isExchanged)
@@ -186,6 +196,7 @@ namespace GoldStore.BusinessLogics
                                 repositoryTransaction.Status = 0;
                                 repositoryTransaction.TransactionMode = 2; // Online
                                 repositoryTransaction.TransactionType = 1; // Sell
+                                repositoryTransaction.WalletInfo = JsonConvert.SerializeObject(wallet);
                                 store.GoldRepositoryTransactions.Add(repositoryTransaction);
 
                                 // STEP 3:
