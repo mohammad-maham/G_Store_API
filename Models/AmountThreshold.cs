@@ -12,7 +12,7 @@ public partial class AmountThreshold
 
     public double SelThreshold { get; set; }
 
-    public double CurrentPrice { get; set; }
+    public double? CurrentPrice { get; set; }
 
     public DateTime RegDate { get; set; }
 

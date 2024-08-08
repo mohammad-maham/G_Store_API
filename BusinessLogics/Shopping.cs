@@ -31,6 +31,7 @@ namespace GoldStore.BusinessLogics
 
         public ApiResponse Buy(OrderVM order)
         {
+            long repositoryTransactionId = 0;
             ApiResponse response = new();
             GoldRepository? repository = new();
             using GStoreDbContext? store = _store;
@@ -56,15 +57,17 @@ namespace GoldStore.BusinessLogics
                         if (orderPrice == order.CurrentCalculatedPrice && order.SourceWalletCurrency != 0 && order.DestinationWalletCurrency != 0)
                         {
                             // STEP 1:
-                            WalletTransactionVM wallet = new();
-                            wallet.SourceAmount = orderPrice;
-                            wallet.DestinationAmout = order.DestinationAmount;
-                            wallet.SourceWalletCurrency = order.SourceWalletCurrency;
-                            wallet.DestinationWalletCurrency = order.DestinationWalletCurrency;
-                            wallet.SourceAddress = order.SourceAddress;
-                            wallet.DestinationAddress = order.DestinationAddress;
-                            wallet.WalletId = order.WalleId;
-                            wallet.RegUserId = order.UserId;
+                            WalletTransactionVM wallet = new()
+                            {
+                                SourceAmount = orderPrice,
+                                DestinationAmout = order.DestinationAmount,
+                                SourceWalletCurrency = order.SourceWalletCurrency,
+                                DestinationWalletCurrency = order.DestinationWalletCurrency,
+                                SourceAddress = order.SourceAddress,
+                                DestinationAddress = order.DestinationAddress,
+                                WalletId = order.WalleId,
+                                RegUserId = order.UserId
+                            };
 
                             // Perform Wallet Exchange
                             bool isExchanged = _wallet.ExchangeLocalWallet(wallet);
@@ -72,7 +75,8 @@ namespace GoldStore.BusinessLogics
                             if (isExchanged)
                             {
                                 // STEP 2:
-                                repositoryTransaction.Id = DataBaseHelper.GetPostgreSQLSequenceNextVal(store, "seq_goldrepositorytransactions");
+                                repositoryTransactionId = DataBaseHelper.GetPostgreSQLSequenceNextVal(store, "seq_goldrepositorytransactions");
+                                repositoryTransaction.Id = repositoryTransactionId;
                                 repositoryTransaction.Weight = order.Weight;
                                 repositoryTransaction.RegDate = DateTime.Now;
                                 repositoryTransaction.RegUserId = order.UserId;
@@ -88,7 +92,7 @@ namespace GoldStore.BusinessLogics
                                 // STEP 3:
                                 store.GoldRepositories.Update(repository);
                                 store.SaveChanges();
-                                response = new ApiResponse();
+                                response = new ApiResponse(data: repositoryTransactionId.ToString());
                             }
                             else
                             {
@@ -146,6 +150,7 @@ namespace GoldStore.BusinessLogics
 
         public ApiResponse Sell(OrderVM order)
         {
+            long repositoryTransactionId = 0;
             ApiResponse response = new();
             GoldRepository? repository = new();
             using GStoreDbContext? store = _store;
@@ -157,67 +162,61 @@ namespace GoldStore.BusinessLogics
             using TransactionScope scope = new(TransactionScopeOption.RequiresNew, scopeOption, TransactionScopeAsyncFlowOption.Enabled);
             try
             {
-                if (CheckGoldInventory(order.Weight))
+                repository = store.GoldRepositories.FirstOrDefault(x => x.GoldType == order.GoldType);
+                if (repository != null && repository.Id != 0)
                 {
-                    repository = store.GoldRepositories.FirstOrDefault(r => r.Weight <= order.Weight);
-                    if (repository != null && repository.Id != 0)
+                    GoldRepositoryTransaction repositoryTransaction = new();
+                    int repoWeight = repository!.Weight;
+                    repository!.Weight += order.Weight;
+                    double baseOnlinePrice = GetBasePrices(order.Weight);
+                    double orderPrice = GetPrices(CalcTypes.sell, order.Weight, order.Carat);
+                    if (orderPrice == order.CurrentCalculatedPrice && order.SourceWalletCurrency != 0 && order.DestinationWalletCurrency != 0)
                     {
-                        GoldRepositoryTransaction repositoryTransaction = new();
-                        int repoWeight = repository!.Weight;
-                        repository!.Weight += order.Weight;
-                        double baseOnlinePrice = GetBasePrices(order.Weight);
-                        double orderPrice = GetPrices(CalcTypes.sell, order.Weight, order.Carat);
-                        if (orderPrice == order.CurrentCalculatedPrice && order.SourceWalletCurrency != 0 && order.DestinationWalletCurrency != 0)
+                        // STEP 1:
+                        WalletTransactionVM wallet = new();
+                        wallet.SourceAmount = order.SourceAmount;
+                        wallet.DestinationAmout = orderPrice;
+                        wallet.SourceWalletCurrency = order.SourceWalletCurrency;
+                        wallet.DestinationWalletCurrency = order.DestinationWalletCurrency;
+                        wallet.SourceAddress = order.SourceAddress;
+                        wallet.DestinationAddress = order.DestinationAddress;
+                        wallet.WalletId = order.WalleId;
+                        wallet.RegUserId = order.UserId;
+
+                        // Perform Wallet Exchange
+                        bool isExchanged = _wallet.ExchangeLocalWallet(wallet);
+
+                        if (isExchanged)
                         {
-                            // STEP 1:
-                            WalletTransactionVM wallet = new();
-                            wallet.SourceAmount = order.SourceAmount;
-                            order.DestinationAmount = orderPrice;
-                            wallet.SourceWalletCurrency = order.SourceWalletCurrency;
-                            wallet.DestinationWalletCurrency = order.DestinationWalletCurrency;
-                            wallet.SourceAddress = order.SourceAddress;
-                            wallet.DestinationAddress = order.DestinationAddress;
-                            wallet.WalletId = order.WalleId;
-                            wallet.RegUserId = order.UserId;
+                            // STEP 2:
+                            repositoryTransactionId = DataBaseHelper.GetPostgreSQLSequenceNextVal(store, "seq_goldrepositorytransactions");
+                            repositoryTransaction.Id = repositoryTransactionId;
+                            repositoryTransaction.Weight = order.Weight;
+                            repositoryTransaction.RegDate = DateTime.Now;
+                            repositoryTransaction.RegUserId = order.UserId;
+                            repositoryTransaction.GoldRepositoryId = repository.Id;
+                            repositoryTransaction.LastGoldValue = repoWeight;
+                            repositoryTransaction.NewGoldValue = repository.Weight;
+                            repositoryTransaction.Status = 0;
+                            repositoryTransaction.TransactionMode = 2; // Online
+                            repositoryTransaction.TransactionType = 1; // Sell
+                            repositoryTransaction.WalletInfo = JsonConvert.SerializeObject(wallet);
+                            store.GoldRepositoryTransactions.Add(repositoryTransaction);
 
-                            // Perform Wallet Exchange
-                            bool isExchanged = _wallet.ExchangeLocalWallet(wallet);
-
-                            if (isExchanged)
-                            {
-                                // STEP 2:
-                                repositoryTransaction.Id = DataBaseHelper.GetPostgreSQLSequenceNextVal(store, "seq_goldrepositorytransactions");
-                                repositoryTransaction.Weight = order.Weight;
-                                repositoryTransaction.RegDate = DateTime.Now;
-                                repositoryTransaction.RegUserId = order.UserId;
-                                repositoryTransaction.GoldRepositoryId = repository.Id;
-                                repositoryTransaction.LastGoldValue = repoWeight;
-                                repositoryTransaction.NewGoldValue = repository.Weight;
-                                repositoryTransaction.Status = 0;
-                                repositoryTransaction.TransactionMode = 2; // Online
-                                repositoryTransaction.TransactionType = 1; // Sell
-                                repositoryTransaction.WalletInfo = JsonConvert.SerializeObject(wallet);
-                                store.GoldRepositoryTransactions.Add(repositoryTransaction);
-
-                                // STEP 3:
-                                store.GoldRepositories.Update(repository);
-                                store.SaveChanges();
-                                response = new ApiResponse();
-                            }
-                            else
-                            {
-                                response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "خطای تراکنش کیف پول" };
-                            }
+                            // STEP 3:
+                            store.GoldRepositories.Update(repository);
+                            store.SaveChanges();
+                            response = new ApiResponse(data: repositoryTransactionId.ToString());
                         }
                         else
                         {
-                            response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "قیمت انتخاب شده با قیمت بروز مغایرت دارد" };
+                            response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "خطای تراکنش کیف پول" };
                         }
                     }
-                }
-                else
-                {
-                    response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "موجودی انبار کافی نمی باشد" };
+                    else
+                    {
+                        response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "قیمت انتخاب شده با قیمت بروز مغایرت دارد" };
+                    }
                 }
                 scope.Complete();
             }

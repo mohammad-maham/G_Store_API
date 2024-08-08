@@ -20,7 +20,7 @@ namespace GoldStore.Models
         public double SelThreshold { get; set; }
 
         [Display(Name = "قیمت جاری")]
-        public double CurrentPrice { get; set; }
+        public double? CurrentPrice { get; set; }
 
         [Display(Name = "تاریخ انقضاء"), Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         public DateTime ExpireEffectDate { get; set; }
