@@ -435,7 +435,8 @@ namespace GoldStore.BusinessLogics
                     CaratologyInfo = x.CaratologyInfo,
                     GoldType = x.GoldType,
                     LastUpdateGregDate = x.RegDate,
-                    LastUpdateUserId = x.RegUserId
+                    LastUpdateUserId = x.RegUserId,
+                    GoldMaintenanceType = x.GoldMaintenanceType,
                 })
                 .ToList();
 

@@ -16,5 +16,6 @@
         public DateTime? LastUpdateGregDate { get; set; }
         public int Carat { get; set; }
         public string? CaratologyInfo { get; set; }
+        public short GoldMaintenanceType { get; set; }
     }
 }
