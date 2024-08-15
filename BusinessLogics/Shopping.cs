@@ -478,5 +478,14 @@ namespace GoldStore.BusinessLogics
             }
             return userInfo;
         }
+
+        public GoldTypesVM GetGoldTypes()
+        {
+            GoldTypesVM goldTypesVM = new();
+            List<GoldType>? goldTypes = _store.GoldTypes.Where(x => x.Staus == 1).ToList();
+            goldTypesVM.GoldTypes = goldTypes;
+            goldTypesVM.GoldCarats = new List<GoldCarat>() { new GoldCarat() };
+            return goldTypesVM;
+        }
     }
 }

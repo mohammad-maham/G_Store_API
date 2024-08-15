@@ -21,5 +21,6 @@ namespace GoldStore.BusinessLogics.IBusinessLogics
         UserInfoVM GetUserInfoById(long userId, string token);
         string ConvertToPersianDate(DateTime date);
         string GetUserNameById(long userId, string token);
+        GoldTypesVM GetGoldTypes();
     }
 }

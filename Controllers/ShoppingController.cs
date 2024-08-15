@@ -45,6 +45,19 @@ namespace GoldStore.Controllers
 
         [HttpPost]
         [Route("[action]")]
+        public IActionResult GetGoldTypes()
+        {
+            GoldTypesVM? goldTypes = _shopping.GetGoldTypes();
+            if (goldTypes != null)
+            {
+                string jsonData = JsonConvert.SerializeObject(goldTypes);
+                return Ok(new ApiResponse(data: jsonData));
+            }
+            return BadRequest(new ApiResponse(404));
+        }
+
+        [HttpPost]
+        [Route("[action]")]
         public IActionResult Buy([FromBody] OrderVM order)
         {
             if (order != null && order.Weight > 0 && order.UserId != 0)
