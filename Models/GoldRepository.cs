@@ -23,4 +23,6 @@ public partial class GoldRepository
     public string? CaratologyInfo { get; set; }
 
     public DateTime RegDate { get; set; }
+
+    public short GoldMaintenanceType { get; set; }
 }

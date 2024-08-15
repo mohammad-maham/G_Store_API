@@ -39,7 +39,7 @@ namespace GoldStore.BusinessLogics
 
                 request.AddJsonBody(wallet);
 
-                // Send SMS
+                // Send Request
                 RestResponse response = client.ExecutePost(request);
 
                 if (response.StatusCode == HttpStatusCode.OK && !string.IsNullOrEmpty(response.Content))

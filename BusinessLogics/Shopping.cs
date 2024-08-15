@@ -3,6 +3,7 @@ using GoldStore.Errors;
 using GoldStore.Helpers;
 using GoldStore.Models;
 using Newtonsoft.Json;
+using System.Globalization;
 using System.Transactions;
 
 namespace GoldStore.BusinessLogics
@@ -11,6 +12,7 @@ namespace GoldStore.BusinessLogics
     {
         private readonly IGateway _gateway;
         private readonly IWallet _wallet;
+        private readonly IAccounting _accounting;
         private readonly GStoreDbContext _store;
         private readonly ILogger<Shopping>? _logger;
 
@@ -19,21 +21,24 @@ namespace GoldStore.BusinessLogics
             _store = new GStoreDbContext();
             _gateway = new Gateway();
             _wallet = new Wallet();
+            _accounting = new Accounting();
         }
 
-        public Shopping(ILogger<Shopping> logger, GStoreDbContext store, IGateway gateway, IWallet wallet)
+        public Shopping(ILogger<Shopping> logger, GStoreDbContext store, IGateway gateway, IWallet wallet, IAccounting accounting)
         {
             _logger = logger;
             _store = store;
             _gateway = gateway;
             _wallet = wallet;
+            _accounting = accounting;
         }
 
         public ApiResponse Buy(OrderVM order)
         {
             long repositoryTransactionId = 0;
             ApiResponse response = new();
-            GoldRepository? repository = new();
+            GoldRepository? ownerRepository = new();
+            GoldRepository? bondedRepository = new();
             using GStoreDbContext? store = _store;
             TransactionOptions scopeOption = new()
             {
@@ -43,15 +48,24 @@ namespace GoldStore.BusinessLogics
             using TransactionScope scope = new(TransactionScopeOption.RequiresNew, scopeOption, TransactionScopeAsyncFlowOption.Enabled);
             try
             {
-                if (CheckGoldInventory(order.Weight, order.GoldType))
+                if (CheckGoldInventory(order.Weight, order.GoldType, 10))
                 {
-                    repository = store.GoldRepositories.FirstOrDefault(r => r.Weight > order.Weight);
-                    if (repository != null && repository.Id != 0)
+                    ownerRepository = store.GoldRepositories.FirstOrDefault(r => r.GoldType == order.GoldType && r.Weight > order.Weight && r.GoldMaintenanceType == 10);
+                    bondedRepository = store.GoldRepositories.FirstOrDefault(r => r.GoldType == order.GoldType && r.GoldMaintenanceType == 11);
+
+                    if (ownerRepository != null && ownerRepository.Id != 0)
                     {
+                        DateTime now = DateTime.Now;
                         GoldRepositoryTransaction repositoryTransaction = new();
-                        int repoWeight = repository!.Weight;
-                        repository!.Weight -= order.Weight;
-                        // STEP 1:
+
+                        int repoWeight = ownerRepository!.Weight;
+                        ownerRepository!.Weight -= order.Weight;
+                        ownerRepository.RegUserId = order.UserId;
+                        bondedRepository!.Weight += order.Weight;
+                        bondedRepository.RegUserId = order.UserId;
+                        ownerRepository.RegDate = now;
+                        bondedRepository.RegDate = now;
+
                         double baseOnlinePrice = GetBasePrices(order.Weight);
                         double orderPrice = GetPrices(CalcTypes.buy, order.Weight, order.Carat);
                         if (orderPrice == order.CurrentCalculatedPrice && order.SourceWalletCurrency != 0 && order.DestinationWalletCurrency != 0)
@@ -80,9 +94,9 @@ namespace GoldStore.BusinessLogics
                                 repositoryTransaction.Weight = order.Weight;
                                 repositoryTransaction.RegDate = DateTime.Now;
                                 repositoryTransaction.RegUserId = order.UserId;
-                                repositoryTransaction.GoldRepositoryId = repository.Id;
+                                repositoryTransaction.GoldRepositoryId = ownerRepository.Id;
                                 repositoryTransaction.LastGoldValue = repoWeight;
-                                repositoryTransaction.NewGoldValue = repository.Weight;
+                                repositoryTransaction.NewGoldValue = ownerRepository.Weight;
                                 repositoryTransaction.Status = 0;
                                 repositoryTransaction.TransactionMode = 2; // Online
                                 repositoryTransaction.TransactionType = 2; // Buy
@@ -90,7 +104,8 @@ namespace GoldStore.BusinessLogics
                                 store.GoldRepositoryTransactions.Add(repositoryTransaction);
 
                                 // STEP 3:
-                                store.GoldRepositories.Update(repository);
+                                store.GoldRepositories.Update(ownerRepository);
+                                store.GoldRepositories.Update(bondedRepository);
                                 store.SaveChanges();
                                 response = new ApiResponse(data: repositoryTransactionId.ToString());
                             }
@@ -119,9 +134,13 @@ namespace GoldStore.BusinessLogics
             return response;
         }
 
-        public bool CheckGoldInventory(int weight, int goldType = 1)
+        public bool CheckGoldInventory(int weight, int goldType = 1, int goldMaintenanceType = 10)
         {
-            return _store.GoldRepositories.Any(x => x.Weight > weight && x.GoldType == goldType);
+            return _store.GoldRepositories
+                .Any(x =>
+                x.Weight >= weight &&
+                x.GoldType == goldType &&
+                x.GoldMaintenanceType == goldMaintenanceType);
         }
 
         public double GetBasePrices(double weight = 0.0)
@@ -152,7 +171,8 @@ namespace GoldStore.BusinessLogics
         {
             long repositoryTransactionId = 0;
             ApiResponse response = new();
-            GoldRepository? repository = new();
+            GoldRepository? ownerRepository = new();
+            GoldRepository? bondedRepository = new();
             using GStoreDbContext? store = _store;
             TransactionOptions scopeOption = new()
             {
@@ -162,61 +182,81 @@ namespace GoldStore.BusinessLogics
             using TransactionScope scope = new(TransactionScopeOption.RequiresNew, scopeOption, TransactionScopeAsyncFlowOption.Enabled);
             try
             {
-                repository = store.GoldRepositories.FirstOrDefault(x => x.GoldType == order.GoldType);
-                if (repository != null && repository.Id != 0)
+                if (CheckGoldInventory(order.Weight, order.GoldType, 11))
                 {
-                    GoldRepositoryTransaction repositoryTransaction = new();
-                    int repoWeight = repository!.Weight;
-                    repository!.Weight += order.Weight;
-                    double baseOnlinePrice = GetBasePrices(order.Weight);
-                    double orderPrice = GetPrices(CalcTypes.sell, order.Weight, order.Carat);
-                    if (orderPrice == order.CurrentCalculatedPrice && order.SourceWalletCurrency != 0 && order.DestinationWalletCurrency != 0)
+                    ownerRepository = store.GoldRepositories.FirstOrDefault(x => x.GoldType == order.GoldType && x.GoldMaintenanceType == 10);
+                    bondedRepository = store.GoldRepositories.FirstOrDefault(x => x.GoldMaintenanceType == 11);
+
+                    if (ownerRepository != null && ownerRepository.Id != 0)
                     {
-                        // STEP 1:
-                        WalletTransactionVM wallet = new();
-                        wallet.SourceAmount = order.SourceAmount;
-                        wallet.DestinationAmout = orderPrice;
-                        wallet.SourceWalletCurrency = order.SourceWalletCurrency;
-                        wallet.DestinationWalletCurrency = order.DestinationWalletCurrency;
-                        wallet.SourceAddress = order.SourceAddress;
-                        wallet.DestinationAddress = order.DestinationAddress;
-                        wallet.WalletId = order.WalleId;
-                        wallet.RegUserId = order.UserId;
+                        DateTime now = DateTime.Now;
+                        GoldRepositoryTransaction repositoryTransaction = new();
 
-                        // Perform Wallet Exchange
-                        bool isExchanged = _wallet.ExchangeLocalWallet(wallet);
+                        int repoWeight = ownerRepository!.Weight;
+                        ownerRepository!.Weight += order.Weight;
+                        ownerRepository.RegUserId = order.UserId;
+                        bondedRepository!.Weight -= order.Weight;
+                        bondedRepository.RegUserId = order.UserId;
+                        ownerRepository.RegDate = now;
+                        bondedRepository.RegDate = now;
 
-                        if (isExchanged)
+                        double baseOnlinePrice = GetBasePrices(order.Weight);
+                        double orderPrice = GetPrices(CalcTypes.sell, order.Weight, order.Carat);
+                        if (orderPrice == order.CurrentCalculatedPrice && order.SourceWalletCurrency != 0 && order.DestinationWalletCurrency != 0)
                         {
-                            // STEP 2:
-                            repositoryTransactionId = DataBaseHelper.GetPostgreSQLSequenceNextVal(store, "seq_goldrepositorytransactions");
-                            repositoryTransaction.Id = repositoryTransactionId;
-                            repositoryTransaction.Weight = order.Weight;
-                            repositoryTransaction.RegDate = DateTime.Now;
-                            repositoryTransaction.RegUserId = order.UserId;
-                            repositoryTransaction.GoldRepositoryId = repository.Id;
-                            repositoryTransaction.LastGoldValue = repoWeight;
-                            repositoryTransaction.NewGoldValue = repository.Weight;
-                            repositoryTransaction.Status = 0;
-                            repositoryTransaction.TransactionMode = 2; // Online
-                            repositoryTransaction.TransactionType = 1; // Sell
-                            repositoryTransaction.WalletInfo = JsonConvert.SerializeObject(wallet);
-                            store.GoldRepositoryTransactions.Add(repositoryTransaction);
+                            // STEP 1:
+                            WalletTransactionVM wallet = new()
+                            {
+                                SourceAmount = order.SourceAmount,
+                                DestinationAmout = orderPrice,
+                                SourceWalletCurrency = order.SourceWalletCurrency,
+                                DestinationWalletCurrency = order.DestinationWalletCurrency,
+                                SourceAddress = order.SourceAddress,
+                                DestinationAddress = order.DestinationAddress,
+                                WalletId = order.WalleId,
+                                RegUserId = order.UserId
+                            };
 
-                            // STEP 3:
-                            store.GoldRepositories.Update(repository);
-                            store.SaveChanges();
-                            response = new ApiResponse(data: repositoryTransactionId.ToString());
+                            // Perform Wallet Exchange
+                            bool isExchanged = _wallet.ExchangeLocalWallet(wallet);
+
+                            if (isExchanged)
+                            {
+                                // STEP 2:
+                                repositoryTransactionId = DataBaseHelper.GetPostgreSQLSequenceNextVal(store, "seq_goldrepositorytransactions");
+                                repositoryTransaction.Id = repositoryTransactionId;
+                                repositoryTransaction.Weight = order.Weight;
+                                repositoryTransaction.RegDate = DateTime.Now;
+                                repositoryTransaction.RegUserId = order.UserId;
+                                repositoryTransaction.GoldRepositoryId = ownerRepository.Id;
+                                repositoryTransaction.LastGoldValue = repoWeight;
+                                repositoryTransaction.NewGoldValue = ownerRepository.Weight;
+                                repositoryTransaction.Status = 0;
+                                repositoryTransaction.TransactionMode = 2; // Online
+                                repositoryTransaction.TransactionType = 1; // Sell
+                                repositoryTransaction.WalletInfo = JsonConvert.SerializeObject(wallet);
+                                store.GoldRepositoryTransactions.Add(repositoryTransaction);
+
+                                // STEP 3:
+                                store.GoldRepositories.Update(ownerRepository);
+                                store.GoldRepositories.Update(bondedRepository);
+                                store.SaveChanges();
+                                response = new ApiResponse(data: repositoryTransactionId.ToString());
+                            }
+                            else
+                            {
+                                response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "خطای تراکنش کیف پول" };
+                            }
                         }
                         else
                         {
-                            response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "خطای تراکنش کیف پول" };
+                            response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "قیمت انتخاب شده با قیمت بروز مغایرت دارد" };
                         }
                     }
-                    else
-                    {
-                        response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "قیمت انتخاب شده با قیمت بروز مغایرت دارد" };
-                    }
+                }
+                else
+                {
+                    response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "موجودی انبار کافی نمی باشد" };
                 }
                 scope.Complete();
             }
@@ -381,6 +421,56 @@ namespace GoldStore.BusinessLogics
             }
 
             return amountThreshold;
+        }
+
+        public GoldRepositoryStatusVM GetGoldRepositoryStatistics(string token)
+        {
+            double totalWeights = 0.0;
+            GoldRepositoryStatusVM statusVM = new();
+            List<GoldRepositoryVM>? lstRepos = _store.GoldRepositories
+                .Select(x => new GoldRepositoryVM()
+                {
+                    Weight = x.Weight,
+                    Carat = x.Carat,
+                    CaratologyInfo = x.CaratologyInfo,
+                    GoldType = x.GoldType,
+                    LastUpdateGregDate = x.RegDate,
+                    LastUpdateUserId = x.RegUserId
+                })
+                .ToList();
+
+            foreach (GoldRepositoryVM item in lstRepos)
+            {
+                totalWeights += item.Weight;
+                item.LastUpdatePersianDate = ConvertToPersianDate(item.LastUpdateGregDate!.Value);
+                item.LastUpdateUser = GetUserNameById(item.LastUpdateUserId, token);
+            }
+
+            statusVM.GoldRepositoryVM = lstRepos;
+            statusVM.TotalWeight = totalWeights;
+            return statusVM;
+        }
+
+        public string ConvertToPersianDate(DateTime date)
+        {
+            string persianDateString = date.ToString("yyyy/MM/dd HH:mm:ss", new CultureInfo("fa-IR"));
+            return persianDateString;
+        }
+
+        public string GetUserNameById(long userId, string token)
+        {
+            string username = string.Empty;
+
+            UserInfoVM userInfo = GetUserInfoById(userId, token);
+            if (userInfo != null)
+                username = $"{userInfo.FirstName} {userInfo.LastName}";
+
+            return username;
+        }
+
+        public UserInfoVM GetUserInfoById(long userId, string token)
+        {
+            return _accounting.GetUserInfo(userId, token);
         }
     }
 }

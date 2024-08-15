@@ -19,6 +19,8 @@ public partial class GStoreDbContext : DbContext
 
     public virtual DbSet<GoldEntity> GoldEntities { get; set; }
 
+    public virtual DbSet<GoldMaintenanceType> GoldMaintenanceTypes { get; set; }
+
     public virtual DbSet<GoldRepository> GoldRepositories { get; set; }
 
     public virtual DbSet<GoldRepositoryTransaction> GoldRepositoryTransactions { get; set; }
@@ -76,6 +78,16 @@ public partial class GStoreDbContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Caption).HasColumnType("character varying");
+            entity.Property(e => e.Name).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<GoldMaintenanceType>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("GoldMaintenanceType_pkey");
+
+            entity.ToTable("GoldMaintenanceType");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Name).HasMaxLength(100);
         });
 

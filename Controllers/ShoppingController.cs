@@ -3,7 +3,10 @@ using GoldStore.BusinessLogics.IBusinessLogics;
 using GoldStore.Errors;
 using GoldStore.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
+using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json;
+using System.Net.Http.Headers;
 
 namespace GoldStore.Controllers
 {
@@ -19,6 +22,25 @@ namespace GoldStore.Controllers
         {
             _logger = logger;
             _shopping = shopping;
+        }
+
+        [HttpPost]
+        [Route("[action]")]
+        public IActionResult GetGoldRepositoryStatistics()
+        {
+            StringValues headerValues = HttpContext.Request.Headers[HeaderNames.Authorization];
+            AuthenticationHeaderValue.TryParse(headerValues, out AuthenticationHeaderValue? headerValue);
+            if (headerValue != null && headerValue.Parameter != null)
+            {
+                string token = headerValue.Parameter;
+                GoldRepositoryStatusVM? statusVM = _shopping.GetGoldRepositoryStatistics(token);
+                if (statusVM != null)
+                {
+                    string jsonData = JsonConvert.SerializeObject(statusVM);
+                    return Ok(new ApiResponse(data: jsonData));
+                }
+            }
+            return BadRequest(new ApiResponse(401));
         }
 
         [HttpPost]
