@@ -462,6 +462,7 @@ namespace GoldStore.BusinessLogics
             string username = string.Empty;
 
             UserInfoVM userInfo = GetUserInfoById(userId, token);
+
             if (userInfo != null)
                 username = $"{userInfo.FirstName} {userInfo.LastName}";
 
@@ -470,7 +471,12 @@ namespace GoldStore.BusinessLogics
 
         public UserInfoVM GetUserInfoById(long userId, string token)
         {
-            return _accounting.GetUserInfo(userId, token);
+            UserInfoVM userInfo = new();
+            if (!string.IsNullOrEmpty(token))
+            {
+                userInfo = _accounting.GetUserInfo(userId, token);
+            }
+            return userInfo;
         }
     }
 }
