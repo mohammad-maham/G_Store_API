@@ -327,14 +327,15 @@ namespace GoldStore.BusinessLogics
 
             if (repo != null)
             {
-                repo.Weight = chargeStore.Weight;
+                if (chargeStore.Decharge == 0)
+                    repo.Weight += chargeStore.Weight;
+                else
+                    repo.Weight -= chargeStore.Weight;
+
                 repo.RegDate = DateTime.Now;
                 repo.Carat = chargeStore.Carat;
-                repo.Status = chargeStore.Status;
                 repo.CaratologyInfo = chargeStore.CaratologyInfo;
-                repo.EntityType = chargeStore.EntityType;
                 repo.RegUserId = chargeStore.RegUserId;
-                repo.GoldType = chargeStore.GoldType;
                 _store.GoldRepositories.Update(repo);
                 _store.SaveChanges();
             }
