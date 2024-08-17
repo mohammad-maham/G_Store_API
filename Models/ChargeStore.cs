@@ -4,7 +4,7 @@ namespace GoldStore.Models
 {
     public class ChargeStore
     {
-        [Display(Name = "وضعیت"), Required(ErrorMessage = "لطفا {0} را وارد کنید")]
+        [Display(Name = "وضعیت")]
         public short Status { get; set; } = 1;
 
         [Display(Name = "نوع طلا"), Required(ErrorMessage = "لطفا {0} را وارد کنید")]
@@ -21,7 +21,7 @@ namespace GoldStore.Models
 
         public short EntityType { get; set; } = 0;
 
-        [Display(Name = "اطلاعات عیار"), Required(ErrorMessage = "لطفا {0} را وارد کنید")]
+        [Display(Name = "اطلاعات عیار")]
         public string? CaratologyInfo { get; set; }
 
         [Display(Name = "شارژ/دشارژ"), Required(ErrorMessage = "لطفا {0} را وارد کنید")]
