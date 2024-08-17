@@ -320,12 +320,12 @@ namespace GoldStore.BusinessLogics
 
         public GoldRepository ChargeGoldRepository(ChargeStore chargeStore)
         {
+            GoldRepository? repo = new();
+            repo = _store
+            .GoldRepositories
+            .FirstOrDefault(x => x.Carat == chargeStore.Carat && x.Status == 1 && x.GoldType == chargeStore.GoldType) ?? new GoldRepository();
 
-            GoldRepository? repo = _store
-                .GoldRepositories
-                .FirstOrDefault(x => x.Carat == chargeStore.Carat && x.Status == 1 && x.GoldType == chargeStore.GoldType);
-
-            if (repo != null)
+            if (repo != null && repo.Id != 0)
             {
                 if (chargeStore.Decharge == 0)
                     repo.Weight += chargeStore.Weight;
@@ -336,6 +336,7 @@ namespace GoldStore.BusinessLogics
                 repo.Carat = chargeStore.Carat;
                 repo.CaratologyInfo = chargeStore.CaratologyInfo;
                 repo.RegUserId = chargeStore.RegUserId;
+
                 _store.GoldRepositories.Update(repo);
                 _store.SaveChanges();
             }
@@ -350,6 +351,8 @@ namespace GoldStore.BusinessLogics
                 repo.EntityType = chargeStore.EntityType;
                 repo.RegUserId = chargeStore.RegUserId;
                 repo.GoldType = chargeStore.GoldType;
+                repo.GoldMaintenanceType = 10;
+
                 _store.GoldRepositories.Add(repo);
                 _store.SaveChanges();
             }
