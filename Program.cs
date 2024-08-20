@@ -60,6 +60,7 @@ namespace GoldStore
             builder.Services.AddProblemDetails();
 
             builder.Services.AddScoped<IShopping, Shopping>();
+            builder.Services.AddScoped<IReports, Reports>();
 
             WebApplication? app = builder.Build();
             // Configure the HTTP request pipeline.

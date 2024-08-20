@@ -33,7 +33,7 @@ namespace GoldStore.BusinessLogics
             _accounting = accounting;
         }
 
-        public ApiResponse Buy(OrderVM order)
+        public ApiResponse Buy(OrderVM order, string token)
         {
             long repositoryTransactionId = 0;
             ApiResponse response = new();
@@ -85,6 +85,7 @@ namespace GoldStore.BusinessLogics
 
                             // Perform Wallet Exchange
                             bool isExchanged = _wallet.ExchangeLocalWallet(wallet);
+                            UserInfoVM userInfoVM = _accounting.GetUserInfo(order.UserId, token);
 
                             if (isExchanged)
                             {
@@ -101,6 +102,7 @@ namespace GoldStore.BusinessLogics
                                 repositoryTransaction.TransactionMode = 2; // Online
                                 repositoryTransaction.TransactionType = 2; // Buy in TransactionType table
                                 repositoryTransaction.WalletInfo = JsonConvert.SerializeObject(wallet);
+                                repositoryTransaction.UserAdditionalData = JsonConvert.SerializeObject(userInfoVM);
                                 store.GoldRepositoryTransactions.Add(repositoryTransaction);
 
                                 ownerRepository.TransactionId = repositoryTransactionId;
@@ -170,7 +172,7 @@ namespace GoldStore.BusinessLogics
             return _store.AmountThresholds.Any(x => x.Id == amountId || x.Status == 1);
         }
 
-        public ApiResponse Sell(OrderVM order)
+        public ApiResponse Sell(OrderVM order, string token)
         {
             long repositoryTransactionId = 0;
             ApiResponse response = new();
@@ -222,6 +224,7 @@ namespace GoldStore.BusinessLogics
 
                             // Perform Wallet Exchange
                             bool isExchanged = _wallet.ExchangeLocalWallet(wallet);
+                            UserInfoVM userInfoVM = _accounting.GetUserInfo(order.UserId, token);
 
                             if (isExchanged)
                             {
@@ -238,6 +241,7 @@ namespace GoldStore.BusinessLogics
                                 repositoryTransaction.TransactionMode = 2; // Online
                                 repositoryTransaction.TransactionType = 1; // Sell in TransactionType table
                                 repositoryTransaction.WalletInfo = JsonConvert.SerializeObject(wallet);
+                                repositoryTransaction.UserAdditionalData = JsonConvert.SerializeObject(userInfoVM);
                                 store.GoldRepositoryTransactions.Add(repositoryTransaction);
 
                                 ownerRepository.TransactionId = repositoryTransactionId;
@@ -505,23 +509,8 @@ namespace GoldStore.BusinessLogics
         public string GetUserNameById(long userId, string token)
         {
             string username = string.Empty;
-
-            UserInfoVM userInfo = GetUserInfoById(userId, token);
-
-            if (userInfo != null)
-                username = $"{userInfo.FirstName} {userInfo.LastName}";
-
+            username = _accounting.GetUserNameById(userId, token);
             return username;
-        }
-
-        public UserInfoVM GetUserInfoById(long userId, string token)
-        {
-            UserInfoVM userInfo = new();
-            if (!string.IsNullOrEmpty(token))
-            {
-                userInfo = _accounting.GetUserInfo(userId, token);
-            }
-            return userInfo;
         }
 
         public GoldTypesVM GetGoldTypes()

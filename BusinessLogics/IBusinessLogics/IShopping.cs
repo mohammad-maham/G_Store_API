@@ -5,8 +5,8 @@ namespace GoldStore.BusinessLogics.IBusinessLogics
 {
     public interface IShopping
     {
-        ApiResponse Buy(OrderVM order);
-        ApiResponse Sell(OrderVM order);
+        ApiResponse Buy(OrderVM order, string token);
+        ApiResponse Sell(OrderVM order, string token);
         bool CheckGoldInventory(int weight, int goldType = 1, int goldMaintenanceType = 10);
         void UpdateAmountThreshold(AmountThreshold tresholdVM);
         void InsertAmountThreshold(AmountThreshold amountThreshold);
@@ -18,7 +18,6 @@ namespace GoldStore.BusinessLogics.IBusinessLogics
         void InsertSupervisorThresholds(AmountThresholdVM thresholdVM);
         AmountThreshold GetAmountThreshold(long thresholdId);
         GoldRepositoryStatusVM GetGoldRepositoryStatistics(string token);
-        UserInfoVM GetUserInfoById(long userId, string token);
         string ConvertToPersianDate(DateTime date);
         string GetUserNameById(long userId, string token);
         GoldTypesVM GetGoldTypes();

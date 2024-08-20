@@ -23,6 +23,8 @@ public partial class GStoreDbContext : DbContext
 
     public virtual DbSet<GoldRepository> GoldRepositories { get; set; }
 
+    public virtual DbSet<ArchiveGoldRepository> ArchiveGoldRepositories { get; set; }
+
     public virtual DbSet<GoldRepositoryTransaction> GoldRepositoryTransactions { get; set; }
 
     public virtual DbSet<GoldType> GoldTypes { get; set; }
@@ -101,12 +103,23 @@ public partial class GStoreDbContext : DbContext
             entity.Property(e => e.CaratologyInfo).HasColumnType("json");
         });
 
+        modelBuilder.Entity<ArchiveGoldRepository>(entity =>
+        {
+            entity.HasKey(e => e.ArchiveId).HasName("ArchiveGoldRepository_pkey");
+
+            entity.ToTable("ArchiveGoldRepository");
+
+            entity.Property(e => e.ArchiveId).ValueGeneratedNever();
+            entity.Property(e => e.CaratologyInfo).HasColumnType("json");
+        });
+
         modelBuilder.Entity<GoldRepositoryTransaction>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("GoldRepositoryTransactions_pkey");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.WalletInfo).HasColumnType("json");
+            entity.Property(e => e.UserAdditionalData).HasColumnType("json");
         });
 
         modelBuilder.Entity<GoldType>(entity =>

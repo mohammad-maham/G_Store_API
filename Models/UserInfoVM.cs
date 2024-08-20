@@ -23,5 +23,9 @@
         public short? Gender { get; set; }
 
         public string? NationalCardImage { get; set; }
+
+        public int? UserRoleId { get; set; }
+
+        public string? UserRole { get; set; }
     }
 }

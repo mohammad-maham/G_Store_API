@@ -23,4 +23,6 @@ public partial class GoldRepositoryTransaction
     public string WalletInfo { get; set; } = null!;
 
     public DateTime RegDate { get; set; }
+
+    public string? UserAdditionalData { get; set; }
 }

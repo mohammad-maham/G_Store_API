@@ -1,7 +1,6 @@
 ﻿using GoldHelpers.Models;
 using GoldStore.BusinessLogics.IBusinessLogics;
 using GoldStore.Models;
-using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using RestSharp;
 using System.Net;
@@ -58,6 +57,28 @@ namespace GoldStore.BusinessLogics
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+            }
+            return userInfo;
+        }
+
+        public string GetUserNameById(long userId, string token)
+        {
+            string username = string.Empty;
+
+            UserInfoVM userInfo = GetUserInfo(userId, token);
+
+            if (userInfo != null)
+                username = $"{userInfo.FirstName} {userInfo.LastName}";
+
+            return username;
+        }
+
+        public UserInfoVM ParseUserInfo(string userAdditionalData)
+        {
+            UserInfoVM userInfo = new();
+            if (!string.IsNullOrEmpty(userAdditionalData))
+            {
+                userInfo = JsonConvert.DeserializeObject<UserInfoVM>(userAdditionalData) ?? new UserInfoVM();
             }
             return userInfo;
         }

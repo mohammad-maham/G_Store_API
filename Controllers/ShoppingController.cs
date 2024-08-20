@@ -60,9 +60,13 @@ namespace GoldStore.Controllers
         [Route("[action]")]
         public IActionResult Buy([FromBody] OrderVM order)
         {
-            if (order != null && order.Weight > 0 && order.UserId != 0)
+            StringValues headerValues = HttpContext.Request.Headers[HeaderNames.Authorization];
+            AuthenticationHeaderValue.TryParse(headerValues, out AuthenticationHeaderValue? headerValue);
+
+            if (order != null && order.Weight > 0 && order.UserId != 0 && headerValue != null && headerValue.Parameter != null)
             {
-                ApiResponse response = _shopping.Buy(order);
+                string token = headerValue.Parameter;
+                ApiResponse response = _shopping.Buy(order, token);
                 return Ok(response);
             }
             return BadRequest(new ApiResponse(404));
@@ -72,9 +76,13 @@ namespace GoldStore.Controllers
         [Route("[action]")]
         public IActionResult Sell([FromBody] OrderVM order)
         {
-            if (order != null && order.Weight != 0 && order.UserId != 0)
+            StringValues headerValues = HttpContext.Request.Headers[HeaderNames.Authorization];
+            AuthenticationHeaderValue.TryParse(headerValues, out AuthenticationHeaderValue? headerValue);
+
+            if (order != null && order.Weight != 0 && order.UserId != 0 && headerValue != null && headerValue.Parameter != null)
             {
-                ApiResponse response = _shopping.Sell(order);
+                string token = headerValue.Parameter;
+                ApiResponse response = _shopping.Sell(order, token);
                 return Ok(response);
             }
             return BadRequest(new ApiResponse(404));
