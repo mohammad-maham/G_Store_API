@@ -164,6 +164,7 @@ namespace GoldStore.BusinessLogics
                     RegPersianDate = ConvertToPersianDate(x.agr.RegDate),
                     UserName = GetUserName(x.grt.UserAdditionalData),
                     Role = GetUserRole(x.grt.UserAdditionalData),
+                    ArchiveOperation = x.agr.ArchiveOperation,
                 });
 
             if (data != null && data.Count() > 0 && archiveData != null && archiveData.Count() > 0)
