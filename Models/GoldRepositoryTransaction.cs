@@ -20,7 +20,7 @@ public partial class GoldRepositoryTransaction
 
     public short TransactionMode { get; set; }
 
-    public string WalletInfo { get; set; } = null!;
+    public string? WalletInfo { get; set; } = null!;
 
     public DateTime RegDate { get; set; }
 

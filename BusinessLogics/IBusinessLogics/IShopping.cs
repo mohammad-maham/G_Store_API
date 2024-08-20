@@ -14,7 +14,7 @@ namespace GoldStore.BusinessLogics.IBusinessLogics
         double GetBasePrices(double weight = 0.0);
         double GetPrices(CalcTypes calcTypes, double weight = 0.0, double carat = 750.0);
         AmountThreshold GetLastThresholdAmount();
-        GoldRepository ChargeGoldRepository(ChargeStore chargeStore);
+        GoldRepository ChargeGoldRepository(ChargeStore chargeStore, string token);
         void InsertSupervisorThresholds(AmountThresholdVM thresholdVM);
         AmountThreshold GetAmountThreshold(long thresholdId);
         GoldRepositoryStatusVM GetGoldRepositoryStatistics(string token);

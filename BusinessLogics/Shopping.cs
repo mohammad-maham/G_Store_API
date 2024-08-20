@@ -3,6 +3,7 @@ using GoldStore.Errors;
 using GoldStore.Helpers;
 using GoldStore.Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Globalization;
 using System.Transactions;
 
@@ -328,7 +329,7 @@ namespace GoldStore.BusinessLogics
             return _store.AmountThresholds.FirstOrDefault(x => x.Status == 1 && x.BuyThreshold != 0 && x.SelThreshold != 0);
         }
 
-        public GoldRepository ChargeGoldRepository(ChargeStore chargeStore)
+        public GoldRepository ChargeGoldRepository(ChargeStore chargeStore, string token)
         {
             GoldRepository? repo = new();
             GoldRepositoryTransaction repositoryTransaction = new();
@@ -350,6 +351,8 @@ namespace GoldStore.BusinessLogics
                 repo.CaratologyInfo = chargeStore.CaratologyInfo;
                 repo.RegUserId = chargeStore.RegUserId;
 
+                UserInfoVM userInfoVM = _accounting.GetUserInfo(chargeStore.RegUserId, token);
+
                 long repositoryTransactionId = DataBaseHelper.GetPostgreSQLSequenceNextVal(_store, "seq_goldrepositorytransactions");
                 repositoryTransaction.Id = repositoryTransactionId;
                 repositoryTransaction.Weight = chargeStore.Weight;
@@ -361,6 +364,7 @@ namespace GoldStore.BusinessLogics
                 repositoryTransaction.Status = 0;
                 repositoryTransaction.TransactionMode = 2; // Online
                 repositoryTransaction.TransactionType = chargeStore.Decharge == 0 ? 3 : 4; // chargeStore.Decharge == 0 ? Increase: Decrease;
+                repositoryTransaction.UserAdditionalData = JsonConvert.SerializeObject(userInfoVM);
 
                 repo.TransactionId = repositoryTransactionId;
 
@@ -370,6 +374,8 @@ namespace GoldStore.BusinessLogics
             }
             else
             {
+                UserInfoVM userInfoVM = _accounting.GetUserInfo(chargeStore.RegUserId, token);
+
                 double weight = chargeStore.Weight;
                 repo!.Id = DataBaseHelper.GetPostgreSQLSequenceNextVal(_store, "seq_goldrepository");
                 repo.Weight = weight;
@@ -393,8 +399,9 @@ namespace GoldStore.BusinessLogics
                 repositoryTransaction.Status = 0;
                 repositoryTransaction.TransactionMode = 2; // Online
                 repositoryTransaction.TransactionType = chargeStore.Decharge == 0 ? 3 : 4; // chargeStore.Decharge == 0 ? Increase: Decrease;
+                repositoryTransaction.UserAdditionalData = JsonConvert.SerializeObject(userInfoVM);
 
-                repo.TransactionId = repositoryTransactionId;
+                repo!.TransactionId = repositoryTransactionId;
 
                 _store.GoldRepositoryTransactions.Add(repositoryTransaction);
                 _store.GoldRepositories.Add(repo);

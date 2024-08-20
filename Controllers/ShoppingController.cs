@@ -134,9 +134,13 @@ namespace GoldStore.Controllers
         [Route("[action]")]
         public IActionResult ChargeStore([FromBody] ChargeStore chargeStore)
         {
-            if (chargeStore != null && chargeStore.Weight > 0)
+            StringValues headerValues = HttpContext.Request.Headers[HeaderNames.Authorization];
+            AuthenticationHeaderValue.TryParse(headerValues, out AuthenticationHeaderValue? headerValue);
+
+            if (chargeStore != null && chargeStore.Weight > 0 && headerValue != null && headerValue.Parameter != null)
             {
-                GoldRepository? goldRepository = _shopping.ChargeGoldRepository(chargeStore);
+                string token = headerValue.Parameter;
+                GoldRepository? goldRepository = _shopping.ChargeGoldRepository(chargeStore, token);
                 string jsonData = JsonConvert.SerializeObject(goldRepository);
                 return Ok(new ApiResponse(data: jsonData));
             }

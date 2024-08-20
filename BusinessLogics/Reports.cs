@@ -125,6 +125,7 @@ namespace GoldStore.BusinessLogics
                 .ToList()
                 .Select(x => new GoldRepositoryReportFilterDataVM()
                 {
+                    TransactionId = x.grt.Id,
                     RegDate = x.gr.RegDate,
                     GoldTypeId = x.gr.GoldType,
                     GoldType = GetGoldType(x.gr.GoldType),
@@ -147,6 +148,7 @@ namespace GoldStore.BusinessLogics
                 .ToList()
                 .Select(x => new GoldRepositoryReportFilterDataVM()
                 {
+                    TransactionId = x.grt.Id,
                     RegDate = x.agr.RegDate,
                     GoldTypeId = x.agr.GoldType,
                     GoldType = GetGoldType(x.agr.GoldType),
@@ -166,7 +168,7 @@ namespace GoldStore.BusinessLogics
 
             if (data != null && data.Count() > 0 && archiveData != null && archiveData.Count() > 0)
             {
-                data = data.AsQueryable().Union(archiveData.AsQueryable()).ToList();
+                data = archiveData.AsQueryable().Union(data.AsQueryable()).ToList();
             }
             else if (data != null && data.Count() > 0 && (archiveData == null || archiveData.Count() == 0))
             {

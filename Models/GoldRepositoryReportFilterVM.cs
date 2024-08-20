@@ -12,6 +12,7 @@
 
     public class GoldRepositoryReportFilterDataVM
     {
+        public long TransactionId { get; set; }
         public DateTime RegDate { get; set; }
         public int GoldTypeId { get; set; }
         public string? GoldType { get; set; }
