@@ -99,7 +99,7 @@ namespace GoldStore.BusinessLogics
                                 repositoryTransaction.NewGoldValue = ownerRepository.Weight;
                                 repositoryTransaction.Status = 0;
                                 repositoryTransaction.TransactionMode = 2; // Online
-                                repositoryTransaction.TransactionType = 2; // Buy
+                                repositoryTransaction.TransactionType = 2; // Buy in TransactionType table
                                 repositoryTransaction.WalletInfo = JsonConvert.SerializeObject(wallet);
                                 store.GoldRepositoryTransactions.Add(repositoryTransaction);
 
@@ -236,7 +236,7 @@ namespace GoldStore.BusinessLogics
                                 repositoryTransaction.NewGoldValue = ownerRepository.Weight;
                                 repositoryTransaction.Status = 0;
                                 repositoryTransaction.TransactionMode = 2; // Online
-                                repositoryTransaction.TransactionType = 1; // Sell
+                                repositoryTransaction.TransactionType = 1; // Sell in TransactionType table
                                 repositoryTransaction.WalletInfo = JsonConvert.SerializeObject(wallet);
                                 store.GoldRepositoryTransactions.Add(repositoryTransaction);
 
