@@ -8,7 +8,7 @@ public partial class GoldRepositoryTransaction
 
     public short Status { get; set; }
 
-    public short TransactionType { get; set; }
+    public int TransactionType { get; set; }
 
     public double LastGoldValue { get; set; }
 

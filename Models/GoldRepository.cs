@@ -12,7 +12,7 @@ public partial class GoldRepository
 
     public short GoldType { get; set; }
 
-    public int Weight { get; set; }
+    public double Weight { get; set; }
 
     public short Carat { get; set; }
 
@@ -25,4 +25,6 @@ public partial class GoldRepository
     public DateTime RegDate { get; set; }
 
     public short GoldMaintenanceType { get; set; }
+
+    public long TransactionId { get; set; }
 }

@@ -58,7 +58,7 @@ namespace GoldStore.BusinessLogics
                         DateTime now = DateTime.Now;
                         GoldRepositoryTransaction repositoryTransaction = new();
 
-                        int repoWeight = ownerRepository!.Weight;
+                        double repoWeight = ownerRepository!.Weight;
                         ownerRepository!.Weight -= order.Weight;
                         ownerRepository.RegUserId = order.UserId;
                         bondedRepository!.Weight += order.Weight;
@@ -102,6 +102,9 @@ namespace GoldStore.BusinessLogics
                                 repositoryTransaction.TransactionType = 2; // Buy
                                 repositoryTransaction.WalletInfo = JsonConvert.SerializeObject(wallet);
                                 store.GoldRepositoryTransactions.Add(repositoryTransaction);
+
+                                ownerRepository.TransactionId = repositoryTransactionId;
+                                bondedRepository.TransactionId = repositoryTransactionId;
 
                                 // STEP 3:
                                 store.GoldRepositories.Update(ownerRepository);
@@ -192,7 +195,7 @@ namespace GoldStore.BusinessLogics
                         DateTime now = DateTime.Now;
                         GoldRepositoryTransaction repositoryTransaction = new();
 
-                        int repoWeight = ownerRepository!.Weight;
+                        double repoWeight = ownerRepository!.Weight;
                         ownerRepository!.Weight += order.Weight;
                         ownerRepository.RegUserId = order.UserId;
                         bondedRepository!.Weight -= order.Weight;
@@ -236,6 +239,9 @@ namespace GoldStore.BusinessLogics
                                 repositoryTransaction.TransactionType = 1; // Sell
                                 repositoryTransaction.WalletInfo = JsonConvert.SerializeObject(wallet);
                                 store.GoldRepositoryTransactions.Add(repositoryTransaction);
+
+                                ownerRepository.TransactionId = repositoryTransactionId;
+                                bondedRepository.TransactionId = repositoryTransactionId;
 
                                 // STEP 3:
                                 store.GoldRepositories.Update(ownerRepository);
@@ -321,12 +327,15 @@ namespace GoldStore.BusinessLogics
         public GoldRepository ChargeGoldRepository(ChargeStore chargeStore)
         {
             GoldRepository? repo = new();
+            GoldRepositoryTransaction repositoryTransaction = new();
+
             repo = _store
             .GoldRepositories
             .FirstOrDefault(x => x.Carat == chargeStore.Carat && x.Status == 1 && x.GoldType == chargeStore.GoldType) ?? new GoldRepository();
 
             if (repo != null && repo.Id != 0)
             {
+                double weight = repo.Weight;
                 if (chargeStore.Decharge == 0)
                     repo.Weight += chargeStore.Weight;
                 else
@@ -337,13 +346,29 @@ namespace GoldStore.BusinessLogics
                 repo.CaratologyInfo = chargeStore.CaratologyInfo;
                 repo.RegUserId = chargeStore.RegUserId;
 
+                long repositoryTransactionId = DataBaseHelper.GetPostgreSQLSequenceNextVal(_store, "seq_goldrepositorytransactions");
+                repositoryTransaction.Id = repositoryTransactionId;
+                repositoryTransaction.Weight = chargeStore.Weight;
+                repositoryTransaction.RegDate = DateTime.Now;
+                repositoryTransaction.RegUserId = chargeStore.RegUserId;
+                repositoryTransaction.GoldRepositoryId = repo.Id;
+                repositoryTransaction.LastGoldValue = weight;
+                repositoryTransaction.NewGoldValue = repo.Weight;
+                repositoryTransaction.Status = 0;
+                repositoryTransaction.TransactionMode = 2; // Online
+                repositoryTransaction.TransactionType = chargeStore.Decharge == 0 ? 3 : 4; // chargeStore.Decharge == 0 ? Increase: Decrease;
+
+                repo.TransactionId = repositoryTransactionId;
+
+                _store.GoldRepositoryTransactions.Add(repositoryTransaction);
                 _store.GoldRepositories.Update(repo);
                 _store.SaveChanges();
             }
             else
             {
+                double weight = chargeStore.Weight;
                 repo!.Id = DataBaseHelper.GetPostgreSQLSequenceNextVal(_store, "seq_goldrepository");
-                repo.Weight = chargeStore.Weight;
+                repo.Weight = weight;
                 repo.RegDate = DateTime.Now;
                 repo.Carat = chargeStore.Carat;
                 repo.Status = chargeStore.Status;
@@ -353,6 +378,21 @@ namespace GoldStore.BusinessLogics
                 repo.GoldType = chargeStore.GoldType;
                 repo.GoldMaintenanceType = 10;
 
+                long repositoryTransactionId = DataBaseHelper.GetPostgreSQLSequenceNextVal(_store, "seq_goldrepositorytransactions");
+                repositoryTransaction.Id = repositoryTransactionId;
+                repositoryTransaction.Weight = weight;
+                repositoryTransaction.RegDate = DateTime.Now;
+                repositoryTransaction.RegUserId = repo.RegUserId;
+                repositoryTransaction.GoldRepositoryId = repo.Id;
+                repositoryTransaction.LastGoldValue = weight;
+                repositoryTransaction.NewGoldValue = weight;
+                repositoryTransaction.Status = 0;
+                repositoryTransaction.TransactionMode = 2; // Online
+                repositoryTransaction.TransactionType = chargeStore.Decharge == 0 ? 3 : 4; // chargeStore.Decharge == 0 ? Increase: Decrease;
+
+                repo.TransactionId = repositoryTransactionId;
+
+                _store.GoldRepositoryTransactions.Add(repositoryTransaction);
                 _store.GoldRepositories.Add(repo);
                 _store.SaveChanges();
             }
