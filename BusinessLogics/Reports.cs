@@ -29,6 +29,26 @@ namespace GoldStore.BusinessLogics
             return persianDateString;
         }
 
+        public string GetArchiveOperationsType(string? operationType)
+        {
+            string result = "تعریف سرمایه";
+            if (!string.IsNullOrEmpty(operationType))
+            {
+                switch (operationType)
+                {
+                    case "UPDATE":
+                        result = "ویرایش سرمایه";
+                        break;
+                    case "DELETE":
+                        result = "حذف سرمایه";
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return result;
+        }
+
         public string GetGoldMaintenanceType(short goldMaintenanceType)
         {
             string result = string.Empty;
@@ -141,6 +161,7 @@ namespace GoldStore.BusinessLogics
                     RegPersianDate = ConvertToPersianDate(x.gr.RegDate),
                     UserName = GetUserName(x.grt.UserAdditionalData),
                     Role = GetUserRole(x.grt.UserAdditionalData),
+                    ArchiveOperation = GetArchiveOperationsType(""),
                 });
 
             IEnumerable<GoldRepositoryReportFilterDataVM>? archiveData = _store.ArchiveGoldRepositories
@@ -164,7 +185,7 @@ namespace GoldStore.BusinessLogics
                     RegPersianDate = ConvertToPersianDate(x.agr.RegDate),
                     UserName = GetUserName(x.grt.UserAdditionalData),
                     Role = GetUserRole(x.grt.UserAdditionalData),
-                    ArchiveOperation = x.agr.ArchiveOperation,
+                    ArchiveOperation = GetArchiveOperationsType(x.agr.ArchiveOperation),
                 });
 
             if (data != null && data.Count() > 0 && archiveData != null && archiveData.Count() > 0)

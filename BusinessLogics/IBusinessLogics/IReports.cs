@@ -11,5 +11,6 @@ namespace GoldStore.BusinessLogics.IBusinessLogics
         string GetGoldType(short goldType);
         string GetGoldMaintenanceType(short goldMaintenanceType);
         string GetTransactionType(int transactionType);
+        string GetArchiveOperationsType(string? operationType);
     }
 }
