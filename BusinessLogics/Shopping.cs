@@ -302,6 +302,7 @@ namespace GoldStore.BusinessLogics
                 {
                     CalcTypes.buy => ThresholdsSault(threshold.BuyThreshold, basePrice) * carat / 750,
                     CalcTypes.sell => ThresholdsSault(threshold.SelThreshold, basePrice) * carat / 750,
+                    CalcTypes.threshold => threshold.CurrentPrice ?? 0.0,
                     _ => basePrice * carat,
                 }
                 : basePrice * carat / 750;
