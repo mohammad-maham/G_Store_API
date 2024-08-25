@@ -3,7 +3,6 @@ using GoldStore.Errors;
 using GoldStore.Helpers;
 using GoldStore.Models;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System.Globalization;
 using System.Transactions;
 
@@ -155,7 +154,7 @@ namespace GoldStore.BusinessLogics
             return onlinePrice * weight;
         }
 
-        public void InsertAmountThreshold(AmountThreshold amountThreshold)
+        public AmountThreshold InsertAmountThreshold(AmountThreshold amountThreshold)
         {
             if (amountThreshold != null && amountThreshold.SelThreshold != 0 && amountThreshold.BuyThreshold != 0)
             {
@@ -164,8 +163,10 @@ namespace GoldStore.BusinessLogics
                 {
                     _store.AmountThresholds.Add(amountThreshold);
                     _store.SaveChanges();
+                    return amountThreshold;
                 }
             }
+            return new AmountThreshold();
         }
 
         public bool isExistAmountThreshold(long amountId)
@@ -279,7 +280,7 @@ namespace GoldStore.BusinessLogics
             return response;
         }
 
-        public void UpdateAmountThreshold(AmountThreshold amountThreshold)
+        public AmountThreshold UpdateAmountThreshold(AmountThreshold amountThreshold)
         {
             if (amountThreshold != null && amountThreshold.Id != 0)
             {
@@ -288,8 +289,10 @@ namespace GoldStore.BusinessLogics
                 {
                     _store.AmountThresholds.Update(amountThreshold);
                     _store.SaveChanges();
+                    return amountThreshold;
                 }
             }
+            return new AmountThreshold();
         }
 
         public double GetPrices(CalcTypes calcTypes, double weight = 0.0, double carat = 750)
@@ -347,9 +350,13 @@ namespace GoldStore.BusinessLogics
             {
                 double weight = repo.Weight;
                 if (chargeStore.Decharge == 0)
+                {
                     repo.Weight += chargeStore.Weight;
+                }
                 else
+                {
                     repo.Weight -= chargeStore.Weight;
+                }
 
                 repo.RegDate = DateTime.Now;
                 repo.Carat = chargeStore.Carat;
@@ -421,18 +428,17 @@ namespace GoldStore.BusinessLogics
             return repo;
         }
 
-        public void InsertSupervisorThresholds(AmountThresholdVM thresholdVM)
+        public AmountThreshold ManageSupervisorThresholds(AmountThresholdVM thresholdVM)
         {
             AmountThreshold? threshold = new();
             double onlinePrice = _gateway.GetOnlineGoldPrice();
             thresholdVM.CurrentPrice = thresholdVM.IsOnlinePrice == 1 ? onlinePrice : thresholdVM.CurrentPrice;
 
-            if (thresholdVM.Id != 0)
-            {
-                threshold = _store.AmountThresholds
-                    .FirstOrDefault(x => x.Id == thresholdVM.Id && x.Status == 1 && x.RegUserId != 0);
+            threshold = _store.AmountThresholds.FirstOrDefault(x => x.Status == 1 && x.RegUserId != 0);
 
-                if (thresholdVM != null)
+            if (threshold != null && threshold.Id != 0)
+            {
+                if (thresholdVM != null && thresholdVM.BuyThreshold != 0 && thresholdVM.SelThreshold != 0)
                 {
                     threshold!.ExpireEffectDate = thresholdVM.ExpireEffectDate;
                     threshold.CurrentPrice = thresholdVM.CurrentPrice;
@@ -447,34 +453,18 @@ namespace GoldStore.BusinessLogics
             }
             else
             {
-                threshold = _store.AmountThresholds.FirstOrDefault();
-                if (threshold != null && threshold.Id != 0)
-                {
-                    threshold.ExpireEffectDate = thresholdVM.ExpireEffectDate;
-                    threshold.CurrentPrice = thresholdVM.CurrentPrice;
-                    threshold.IsOnlinePrice = thresholdVM.IsOnlinePrice;
-                    threshold.Status = thresholdVM.Status;
-                    threshold.BuyThreshold = thresholdVM.BuyThreshold;
-                    threshold.SelThreshold = thresholdVM.SelThreshold;
-                    threshold.RegUserId = thresholdVM.RegUserId;
-                    _store.AmountThresholds.Update(threshold);
-                    _store.SaveChanges();
-                }
-                else
-                {
-                    threshold = new();
-                    threshold!.ExpireEffectDate = thresholdVM.ExpireEffectDate;
-                    threshold.CurrentPrice = thresholdVM.CurrentPrice;
-                    threshold.IsOnlinePrice = thresholdVM.IsOnlinePrice;
-                    threshold.Status = thresholdVM.Status;
-                    threshold.BuyThreshold = thresholdVM.BuyThreshold;
-                    threshold.SelThreshold = thresholdVM.SelThreshold;
-                    threshold.RegUserId = thresholdVM.RegUserId;
-                    threshold.RegDate = DateTime.Now;
-                    _store.AmountThresholds.Add(threshold);
-                    _store.SaveChanges();
-                }
+                threshold!.ExpireEffectDate = thresholdVM.ExpireEffectDate;
+                threshold.CurrentPrice = thresholdVM.CurrentPrice;
+                threshold.IsOnlinePrice = thresholdVM.IsOnlinePrice;
+                threshold.Status = thresholdVM.Status;
+                threshold.BuyThreshold = thresholdVM.BuyThreshold;
+                threshold.SelThreshold = thresholdVM.SelThreshold;
+                threshold.RegUserId = thresholdVM.RegUserId;
+                threshold.RegDate = DateTime.Now;
+                _store.AmountThresholds.Add(threshold);
+                _store.SaveChanges();
             }
+            return threshold;
         }
 
         public AmountThreshold GetAmountThreshold(long thresholdId)
@@ -536,7 +526,7 @@ namespace GoldStore.BusinessLogics
             GoldTypesVM goldTypesVM = new();
             List<GoldType>? goldTypes = _store.GoldTypes.Where(x => x.Staus == 1).ToList();
             goldTypesVM.GoldTypes = goldTypes;
-            goldTypesVM.GoldCarats = new List<GoldCarat>() { new GoldCarat() };
+            goldTypesVM.GoldCarats = [new GoldCarat()];
             return goldTypesVM;
         }
     }

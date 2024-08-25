@@ -149,12 +149,13 @@ namespace GoldStore.Controllers
 
         [HttpPost]
         [Route("[action]")]
-        public IActionResult InsertThreshold([FromBody] AmountThresholdVM threshold)
+        public IActionResult ManageThresholds([FromBody] AmountThresholdVM threshold)
         {
             if (threshold != null && threshold.RegUserId != 0)
             {
-                _shopping.InsertSupervisorThresholds(threshold);
-                return Ok(new ApiResponse());
+                AmountThreshold amountThreshold = _shopping.ManageSupervisorThresholds(threshold);
+                string jsonData = JsonConvert.SerializeObject(amountThreshold);
+                return Ok(new ApiResponse(data: jsonData));
             }
             return BadRequest(new ApiResponse(404));
         }
