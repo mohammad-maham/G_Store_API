@@ -318,7 +318,7 @@ namespace GoldStore.BusinessLogics
             if (thresholdValue < 1)
             {
                 // Percentage
-                result = basePrice + (basePrice * (thresholdValue / 100));
+                result = basePrice + (basePrice * thresholdValue);
             }
             else
             {
