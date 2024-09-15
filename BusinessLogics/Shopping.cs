@@ -300,15 +300,31 @@ namespace GoldStore.BusinessLogics
             double res = 0.0;
             double basePrice = GetBasePrices(weight);
             AmountThreshold? threshold = GetLastThresholdAmount();
-            res = calcTypes != CalcTypes.none && threshold != null
-                ? calcTypes switch
+            basePrice = basePrice == 0 && threshold != null && threshold.IsOnlinePrice == 0 ? (threshold.CurrentPrice * weight) ?? 0.0 : basePrice;
+
+            if (calcTypes != CalcTypes.none && threshold != null)
+            {
+                switch (calcTypes)
                 {
-                    CalcTypes.buy => ThresholdsSault(threshold.BuyThreshold, basePrice) * carat / 750,
-                    CalcTypes.sell => ThresholdsSault(threshold.SelThreshold, basePrice) * carat / 750,
-                    CalcTypes.threshold => threshold.CurrentPrice ?? 0.0,
-                    _ => basePrice * carat,
+                    case CalcTypes.none:
+                        res = basePrice * carat;
+                        break;
+                    case CalcTypes.buy:
+                        res = ThresholdsSault(threshold.BuyThreshold, basePrice) * carat / 750;
+                        break;
+                    case CalcTypes.sell:
+                        res = ThresholdsSault(threshold.SelThreshold, basePrice) * carat / 750;
+                        break;
+                    case CalcTypes.threshold:
+                        res = threshold.CurrentPrice ?? 0.0;
+                        break;
+
                 }
-                : basePrice * carat / 750;
+            }
+            else
+            {
+                res = (double)(basePrice * carat / 750);
+            }
             return res;
         }
 
