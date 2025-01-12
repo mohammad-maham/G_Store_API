@@ -2,9 +2,11 @@
 using GoldStore.Errors;
 using GoldStore.Helpers;
 using GoldStore.Models;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System.Globalization;
 using System.Transactions;
+using static GoldStore.Models.Enums;
 
 namespace GoldStore.BusinessLogics
 {
@@ -66,8 +68,18 @@ namespace GoldStore.BusinessLogics
                         ownerRepository.RegDate = now;
                         bondedRepository.RegDate = now;
 
-                        double baseOnlinePrice = GetBasePrices(order.Weight);
-                        double orderPrice = GetPrices(CalcTypes.buy, order.Weight, order.Carat);
+                        double baseOnlinePrice = GetBasePrices(order.EntityId, order.Weight);
+
+                        PriceCalcVM calcVM = new PriceCalcVM()
+                        {
+                            CalcType = (int)CalcTypes.buy,
+                            Weight = order.Weight,
+                            Carat = order.Carat,
+                            EntityId = order.EntityId
+                        };
+
+                        double orderPrice = GetPrices(calcVM);
+
                         if (orderPrice == order.CurrentCalculatedPrice && order.SourceWalletCurrency != 0 && order.DestinationWalletCurrency != 0)
                         {
                             // STEP 1:
@@ -148,7 +160,7 @@ namespace GoldStore.BusinessLogics
                 x.GoldMaintenanceType == goldMaintenanceType);
         }
 
-        public double GetBasePrices(double weight = 0.0)
+        public double GetBasePrices(EntityTypes entity, double weight = 0.0)
         {
             double onlinePrice = _gateway.GetOnlineGoldPrice();
             return onlinePrice * weight;
@@ -207,8 +219,17 @@ namespace GoldStore.BusinessLogics
                         ownerRepository.RegDate = now;
                         bondedRepository.RegDate = now;
 
-                        double baseOnlinePrice = GetBasePrices(order.Weight);
-                        double orderPrice = GetPrices(CalcTypes.sell, order.Weight, order.Carat);
+                        double baseOnlinePrice = GetBasePrices(order.EntityId, order.Weight);
+                        PriceCalcVM calcVM = new PriceCalcVM()
+                        {
+                            CalcType = (int)CalcTypes.sell,
+                            Weight = order.Weight,
+                            Carat = order.Carat,
+                            EntityId = order.EntityId
+                        };
+
+                        double orderPrice = GetPrices(calcVM);
+
                         if (orderPrice == order.CurrentCalculatedPrice && order.SourceWalletCurrency != 0 && order.DestinationWalletCurrency != 0)
                         {
                             // STEP 1:
@@ -295,36 +316,90 @@ namespace GoldStore.BusinessLogics
             return new AmountThreshold();
         }
 
-        public double GetPrices(CalcTypes calcTypes, double weight = 0.0, double carat = 750)
+        public double GetPrices(PriceCalcVM priceCalc)
         {
             double res = 0.0;
-            double basePrice = GetBasePrices(weight);
-            AmountThreshold? threshold = GetLastThresholdAmount();
-            basePrice = basePrice == 0 && threshold != null && threshold.IsOnlinePrice == 0 ? (threshold.CurrentPrice * weight) ?? 0.0 : basePrice;
+            double basePrice = 0.0;
+            bool isGoldProduct = (priceCalc.EntityId == EntityTypes.PhysicallyGold || priceCalc.EntityId == EntityTypes.VirtualyGold);
 
-            if (calcTypes != CalcTypes.none && threshold != null)
+            try
             {
-                switch (calcTypes)
-                {
-                    case CalcTypes.none:
-                        res = basePrice * carat;
-                        break;
-                    case CalcTypes.buy:
-                        res = ThresholdsSault(threshold.BuyThreshold, basePrice) * carat / 750;
-                        break;
-                    case CalcTypes.sell:
-                        res = ThresholdsSault(threshold.SelThreshold, basePrice) * carat / 750;
-                        break;
-                    case CalcTypes.threshold:
-                        res = threshold.CurrentPrice ?? 0.0;
-                        break;
+                AmountThreshold? threshold = GetEntityThresholdAmount(priceCalc.EntityId);
 
+                if (threshold != null && threshold.IsOnlinePrice == 0)
+                {
+                    if (threshold.ExpireEffectDate < DateTime.Now)
+                    {
+                        basePrice = GetBasePrices(priceCalc.EntityId, priceCalc.Weight);
+                        threshold.ExpireEffectDate = DateTime.Now.AddMinutes(10);
+                        threshold.CurrentPrice = basePrice;
+                        threshold.RegUserId = 1;
+                        _store.AmountThresholds.Entry(threshold).State = EntityState.Modified;
+                        _store.SaveChanges();
+                    }
+                    else
+                    {
+                        basePrice = (threshold.CurrentPrice * priceCalc.Weight) ?? 0.0;
+                    }
+                }
+                if (isGoldProduct)
+                {
+                    if ((CalcTypes)priceCalc.CalcType != CalcTypes.none && threshold != null)
+                    {
+                        switch ((CalcTypes)priceCalc.CalcType)
+                        {
+                            case CalcTypes.none:
+                                res = basePrice * priceCalc.Carat;
+                                break;
+                            case CalcTypes.buy:
+                                res = ThresholdsSault(threshold.BuyThreshold, basePrice) * priceCalc.Carat / 750;
+                                break;
+                            case CalcTypes.sell:
+                                res = ThresholdsSault(threshold.SelThreshold, basePrice) * priceCalc.Carat / 750;
+                                break;
+                            case CalcTypes.threshold:
+                                res = threshold.CurrentPrice ?? 0.0;
+                                break;
+
+                        }
+                    }
+                    else
+                    {
+                        res = (double)(basePrice * priceCalc.Carat / 750);
+                    }
+                }
+                else
+                {
+                    if ((CalcTypes)priceCalc.CalcType != CalcTypes.none && threshold != null)
+                    {
+                        switch ((CalcTypes)priceCalc.CalcType)
+                        {
+                            case CalcTypes.none:
+                                res = basePrice;
+                                break;
+                            case CalcTypes.buy:
+                                res = ThresholdsSault(threshold.BuyThreshold, basePrice);
+                                break;
+                            case CalcTypes.sell:
+                                res = ThresholdsSault(threshold.SelThreshold, basePrice);
+                                break;
+                            case CalcTypes.threshold:
+                                res = threshold.CurrentPrice ?? 0.0;
+                                break;
+
+                        }
+                    }
+                    else
+                    {
+                        res = (double)(basePrice);
+                    }
                 }
             }
-            else
+            catch (Exception)
             {
-                res = (double)(basePrice * carat / 750);
+                return -1;
             }
+
             return res;
         }
 
@@ -544,6 +619,15 @@ namespace GoldStore.BusinessLogics
             goldTypesVM.GoldTypes = goldTypes;
             goldTypesVM.GoldCarats = [new GoldCarat()];
             return goldTypesVM;
+        }
+
+        public AmountThreshold GetEntityThresholdAmount(EntityTypes entity)
+        {
+            AmountThreshold? threshold = _store.AmountThresholds
+                .Where(x => x.Status == 1 && x.BuyThreshold > 0 && x.SelThreshold > 0 && x.EntityId == (long)entity)
+                .FirstOrDefault();
+
+            return threshold;
         }
     }
 }

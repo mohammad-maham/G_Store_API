@@ -57,6 +57,9 @@ namespace GoldStore
 
             builder.Services.AddDbContext<GStoreDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("GStoreDbContext"), options => options.UseNodaTime()));
 
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
+
             builder.Services.AddProblemDetails();
 
             builder.Services.AddScoped<IShopping, Shopping>();

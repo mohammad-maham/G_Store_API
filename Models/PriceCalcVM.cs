@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using static GoldStore.Models.Enums;
 
 namespace GoldStore.Models
 {
@@ -6,15 +7,19 @@ namespace GoldStore.Models
     {
         [Display(Name = "نوع خدمت")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        public int GoldCalcType { get; set; }
+        public int CalcType { get; set; }
 
         [Display(Name = "وزن طلا")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        public double GoldWeight { get; set; }
+        public double Weight { get; set; }
 
         [Display(Name = "عیار")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        public double GoldCarat { get; set; }
+        public double Carat { get; set; }
+
+        [Display(Name = "نوع محصول")]
+        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
+        public EntityTypes EntityId { get; set; }
     }
 
     public enum CalcTypes

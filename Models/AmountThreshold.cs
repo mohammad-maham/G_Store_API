@@ -19,4 +19,6 @@ public partial class AmountThreshold
     public DateTime ExpireEffectDate { get; set; }
 
     public short IsOnlinePrice { get; set; }
+
+    public double EntityId { get; set; }
 }

@@ -10,7 +10,7 @@ using System.Net.Http.Headers;
 
 namespace GoldStore.Controllers
 {
-    [GoldAuthorize]
+    //[GoldAuthorize]
     [ApiController]
     [Route("api/[controller]")]
     public class ShoppingController : ControllerBase
@@ -118,14 +118,15 @@ namespace GoldStore.Controllers
         public IActionResult GetPrices([FromBody] PriceCalcVM calcVM)
         {
             double price = 0.0;
-            if (calcVM != null && calcVM.GoldWeight > 0)
+
+            if (calcVM != null && calcVM.Weight > 0 && calcVM.EntityId > 0)
             {
-                calcVM.GoldCarat = calcVM.GoldCarat == 0 ? 750 : calcVM.GoldCarat;
-                price = _shopping.GetPrices((CalcTypes)calcVM.GoldCalcType, calcVM.GoldWeight, calcVM.GoldCarat);
+                calcVM.Carat = ((calcVM.EntityId == Enums.EntityTypes.PhysicallyGold || calcVM.EntityId == Enums.EntityTypes.VirtualyGold) && calcVM.Carat == 0) ? 750 : calcVM.Carat;
+
+                price = _shopping.GetPrices(calcVM);
+
                 if (price > 0)
-                {
                     return Ok(new ApiResponse(data: price.ToString("N0")));
-                }
             }
             return BadRequest(new ApiResponse(404));
         }

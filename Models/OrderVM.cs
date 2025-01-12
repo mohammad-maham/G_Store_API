@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using static GoldStore.Models.Enums;
 
 namespace GoldStore.Models
 {
@@ -24,6 +25,8 @@ namespace GoldStore.Models
         [Display(Name = "عیار")]
         public long Carat { get; set; }
         public int GoldType { get; set; }
+        [Display(Name = "نوع محصول"), Required(ErrorMessage = "لطفا {0} را وارد کنید")]
+        public EntityTypes EntityId { get; set; }
     }
 
     public class WalletTransactionVM
