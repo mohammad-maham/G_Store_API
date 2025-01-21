@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace GoldStore.Models;
 
-public partial class GoldEntity
+public partial class EntityMode
 {
     public short Id { get; set; }
 

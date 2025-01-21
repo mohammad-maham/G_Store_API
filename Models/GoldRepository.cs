@@ -1,10 +1,12 @@
-﻿namespace GoldStore.Models;
+﻿using System;
+using System.Collections.Generic;
+using NodaTime;
 
-public partial class ArchiveGoldRepository
+namespace GoldStore.Models;
+
+public partial class GoldRepository
 {
     public long Id { get; set; }
-
-    public long ArchiveId { get; set; }
 
     public short Status { get; set; }
 
@@ -25,8 +27,4 @@ public partial class ArchiveGoldRepository
     public short GoldMaintenanceType { get; set; }
 
     public long TransactionId { get; set; }
-
-    public DateTime ArchiveDate { get; set; }
-
-    public string? ArchiveOperation { get; set; }
 }

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 namespace GoldStore.Models;
 
-public partial class GoldEntity
+public partial class MaintenanceType
 {
-    public short Id { get; set; }
+    public long Id { get; set; }
 
     public string Name { get; set; } = null!;
 
-    public string? Caption { get; set; }
+    public short Status { get; set; }
 }

@@ -1,4 +1,8 @@
-﻿namespace GoldStore.Models;
+﻿using System;
+using System.Collections.Generic;
+using NodaTime;
+
+namespace GoldStore.Models;
 
 public partial class AmountThreshold
 {
@@ -20,5 +24,5 @@ public partial class AmountThreshold
 
     public short IsOnlinePrice { get; set; }
 
-    public double EntityId { get; set; }
+    public int EntityId { get; set; }
 }

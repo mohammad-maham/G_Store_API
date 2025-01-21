@@ -1,5 +1,4 @@
-﻿using GoldHelpers.Helpers;
-using GoldStore.BusinessLogics.IBusinessLogics;
+﻿using GoldStore.BusinessLogics.IBusinessLogics;
 using GoldStore.Errors;
 using GoldStore.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +9,6 @@ using System.Net.Http.Headers;
 
 namespace GoldStore.Controllers
 {
-    //[GoldAuthorize]
     [ApiController]
     [Route("api/[controller]")]
     public class ShoppingController : ControllerBase
@@ -87,31 +85,6 @@ namespace GoldStore.Controllers
             }
             return BadRequest(new ApiResponse(404));
         }
-
-        //[HttpPost]
-        //[Route("[action]")]
-        //public async Task<IActionResult> InsertThreshold([FromBody] AmountThreshold threshold)
-        //{
-        //    if (threshold != null && threshold.SelThreshold != 0 && threshold.BuyThreshold != 0)
-        //    {
-        //        await _shopping.InsertAmountThreshold(threshold);
-        //        return Ok(new ApiResponse());
-        //    }
-        //    return BadRequest(new ApiResponse(404));
-        //}
-
-        //[HttpPost]
-        //[Route("[action]")]
-        //public async Task<IActionResult> UpdateThreshold([FromBody] AmountThreshold threshold)
-        //{
-        //    if (threshold != null && threshold.SelThreshold != 0 && threshold.BuyThreshold != 0 && threshold.Id != 0)
-        //    {
-        //        await _shopping.UpdateAmountThreshold(threshold);
-        //        return Ok(new ApiResponse());
-        //    }
-        //    return BadRequest(new ApiResponse(404));
-        //}
-
 
         [HttpPost]
         [Route("[action]")]

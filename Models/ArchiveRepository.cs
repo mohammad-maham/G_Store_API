@@ -4,13 +4,13 @@ using NodaTime;
 
 namespace GoldStore.Models;
 
-public partial class ArchiveGoldRepository
+public partial class ArchiveRepository
 {
     public long Id { get; set; }
 
     public short Status { get; set; }
 
-    public short GoldType { get; set; }
+    public short Type { get; set; }
 
     public int Weight { get; set; }
 
@@ -28,7 +28,7 @@ public partial class ArchiveGoldRepository
 
     public string ArchiveOperation { get; set; } = null!;
 
-    public short GoldMaintenanceType { get; set; }
+    public short MaintenanceType { get; set; }
 
     public long TransactionId { get; set; }
 
