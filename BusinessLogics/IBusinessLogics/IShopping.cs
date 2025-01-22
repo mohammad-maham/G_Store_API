@@ -16,12 +16,12 @@ namespace GoldStore.BusinessLogics.IBusinessLogics
         double GetPrices(PriceCalcVM priceCalc);
         AmountThreshold GetLastThresholdAmount();
         AmountThreshold GetEntityThresholdAmount(EntityTypes entity);
-        GoldRepository ChargeGoldRepository(ChargeStore chargeStore, string token);
+        Repository ChargeGoldRepository(ChargeStore chargeStore, string token);
         AmountThreshold ManageSupervisorThresholds(AmountThresholdVM thresholdVM);
         AmountThreshold GetAmountThreshold(long thresholdId);
-        GoldRepositoryStatusVM GetGoldRepositoryStatistics(string token);
+        RepositoryStatusVM GetRepositoryStatistics(string token);
         string ConvertToPersianDate(DateTime date);
         string GetUserNameById(long userId, string token);
-        GoldTypesVM GetGoldTypes();
+        EntityTypesVM GetEntityTypes();
     }
 }

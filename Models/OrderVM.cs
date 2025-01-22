@@ -24,7 +24,6 @@ namespace GoldStore.Models
         public double CurrentCalculatedPrice { get; set; }
         [Display(Name = "عیار")]
         public long Carat { get; set; }
-        public int GoldType { get; set; }
         [Display(Name = "نوع محصول"), Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         public EntityTypes EntityId { get; set; }
     }

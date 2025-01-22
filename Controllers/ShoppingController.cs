@@ -24,14 +24,14 @@ namespace GoldStore.Controllers
 
         [HttpPost]
         [Route("[action]")]
-        public IActionResult GetGoldRepositoryStatistics()
+        public IActionResult GetRepositoryStatistics()
         {
             StringValues headerValues = HttpContext.Request.Headers[HeaderNames.Authorization];
             AuthenticationHeaderValue.TryParse(headerValues, out AuthenticationHeaderValue? headerValue);
             if (headerValue != null && headerValue.Parameter != null)
             {
                 string token = headerValue.Parameter;
-                GoldRepositoryStatusVM? statusVM = _shopping.GetGoldRepositoryStatistics(token);
+                RepositoryStatusVM? statusVM = _shopping.GetRepositoryStatistics(token);
                 if (statusVM != null)
                 {
                     string jsonData = JsonConvert.SerializeObject(statusVM);
@@ -43,9 +43,9 @@ namespace GoldStore.Controllers
 
         [HttpPost]
         [Route("[action]")]
-        public IActionResult GetGoldTypes()
+        public IActionResult GetentityTypes()
         {
-            GoldTypesVM? goldTypes = _shopping.GetGoldTypes();
+            EntityTypesVM? goldTypes = _shopping.GetEntityTypes();
             if (goldTypes != null)
             {
                 string jsonData = JsonConvert.SerializeObject(goldTypes);
@@ -114,7 +114,7 @@ namespace GoldStore.Controllers
             if (chargeStore != null && chargeStore.Weight > 0 && headerValue != null && headerValue.Parameter != null)
             {
                 string token = headerValue.Parameter;
-                GoldRepository? goldRepository = _shopping.ChargeGoldRepository(chargeStore, token);
+                Repository? goldRepository = _shopping.ChargeGoldRepository(chargeStore, token);
                 string jsonData = JsonConvert.SerializeObject(goldRepository);
                 return Ok(new ApiResponse(data: jsonData));
             }

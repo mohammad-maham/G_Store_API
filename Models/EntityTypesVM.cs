@@ -1,9 +1,8 @@
 ﻿namespace GoldStore.Models
 {
-    public class GoldTypesVM
+    public class EntityTypesVM
     {
-        public List<GoldType>? GoldTypes { get; set; }
-        public List<GoldCarat>? GoldCarats { get; set; }
+        public List<Entity>? EntityTypes { get; set; }
     }
 
     public class GoldCarat

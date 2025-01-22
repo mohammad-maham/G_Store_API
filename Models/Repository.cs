@@ -12,7 +12,7 @@ public partial class Repository
 
     public int Entity { get; set; }
 
-    public int Value { get; set; }
+    public decimal Value { get; set; }
 
     public long RegUserId { get; set; }
 
