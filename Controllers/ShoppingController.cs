@@ -43,7 +43,7 @@ namespace GoldStore.Controllers
 
         [HttpPost]
         [Route("[action]")]
-        public IActionResult GetentityTypes()
+        public IActionResult GetEntityTypes()
         {
             EntityTypesVM? goldTypes = _shopping.GetEntityTypes();
             if (goldTypes != null)
@@ -106,7 +106,7 @@ namespace GoldStore.Controllers
 
         [HttpPost]
         [Route("[action]")]
-        public IActionResult ChargeStore([FromBody] ChargeStore chargeStore)
+        public IActionResult ChargeRepository([FromBody] ChargeRepository chargeStore)
         {
             StringValues headerValues = HttpContext.Request.Headers[HeaderNames.Authorization];
             AuthenticationHeaderValue.TryParse(headerValues, out AuthenticationHeaderValue? headerValue);
@@ -114,7 +114,7 @@ namespace GoldStore.Controllers
             if (chargeStore != null && chargeStore.Weight > 0 && headerValue != null && headerValue.Parameter != null)
             {
                 string token = headerValue.Parameter;
-                Repository? goldRepository = _shopping.ChargeGoldRepository(chargeStore, token);
+                Repository? goldRepository = _shopping.ChargeRepository(chargeStore, token);
                 string jsonData = JsonConvert.SerializeObject(goldRepository);
                 return Ok(new ApiResponse(data: jsonData));
             }

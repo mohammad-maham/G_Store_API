@@ -26,7 +26,7 @@ namespace GoldStore.Controllers
 
         [HttpPost]
         [Route("[action]")]
-        public IActionResult GetGoldRepositoryReport(GoldRepositoryReportFilterVM filterVM)
+        public IActionResult GetRepositoryReport(RepositoryReportFilterVM filterVM)
         {
             StringValues headerValues = HttpContext.Request.Headers[HeaderNames.Authorization];
             AuthenticationHeaderValue.TryParse(headerValues, out AuthenticationHeaderValue? headerValue);
@@ -34,7 +34,7 @@ namespace GoldStore.Controllers
             if (filterVM != null && headerValue != null && headerValue.Parameter != null)
             {
                 string token = headerValue.Parameter;
-                List<GoldRepositoryReportFilterDataVM> report = _reports.GoldRepositoryReport(filterVM, token);
+                List<RepositoryReportFilterDataVM> report = _reports.RepositoryReport(filterVM, token);
                 string jsonData = JsonConvert.SerializeObject(report);
                 return Ok(new ApiResponse(data: jsonData));
             }

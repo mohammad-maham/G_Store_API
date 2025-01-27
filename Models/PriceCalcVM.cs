@@ -14,12 +14,15 @@ namespace GoldStore.Models
         public double Weight { get; set; }
 
         [Display(Name = "عیار")]
-        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        public double Carat { get; set; }
+        public double? Carat { get; set; }
 
         [Display(Name = "نوع محصول")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         public EntityTypes EntityId { get; set; }
+
+        [Display(Name = "شناسه متریال")]
+        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
+        public long? MaterialId { get; set; }
     }
 
     public enum CalcTypes

@@ -27,5 +27,8 @@ namespace GoldStore.Models
 
         [Display(Name = "قیمت آنلاین"), Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         public short IsOnlinePrice { get; set; }
+
+        [Display(Name = "شناسه موجودیت"), Required(ErrorMessage = "لطفا {0} را وارد کنید")]
+        public int EntityId { get; set; }
     }
 }

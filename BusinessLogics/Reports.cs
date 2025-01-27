@@ -49,39 +49,9 @@ namespace GoldStore.BusinessLogics
             return result;
         }
 
-        public string GetGoldMaintenanceType(short goldMaintenanceType)
-        {
-            string result = string.Empty;
-            switch (goldMaintenanceType)
-            {
-                case 10:
-                    result = "مالکیتی";
-                    break;
-                case 11:
-                    result = "امانتی";
-                    break;
-                default:
-                    break;
-            }
-            return result;
-        }
+        public string GetMaintenanceType(int maintenanceTypeId) => _store.MaintenanceTypes.FirstOrDefault(x => x.Id == maintenanceTypeId)?.Title ?? "";
 
-        public string GetGoldType(short goldType)
-        {
-            string result = string.Empty;
-            switch (goldType)
-            {
-                case 1:
-                    result = "طلا آب شده";
-                    break;
-                case 2:
-                    result = "طلا آب شده-حواله شده";
-                    break;
-                default:
-                    break;
-            }
-            return result;
-        }
+        public string GetEntityType(int entityId) => _store.Entities.FirstOrDefault(x => x.Id == entityId)?.Caption ?? "";
 
         public string GetTransactionType(int transactionType)
         {
@@ -136,52 +106,50 @@ namespace GoldStore.BusinessLogics
             return role;
         }
 
-        public List<GoldRepositoryReportFilterDataVM> GoldRepositoryReport(GoldRepositoryReportFilterVM reportFilterVM, string token)
+        public List<RepositoryReportFilterDataVM> RepositoryReport(RepositoryReportFilterVM reportFilterVM, string token)
         {
-            List<GoldRepositoryReportFilterDataVM> reportFilterData = new List<GoldRepositoryReportFilterDataVM>();
+            List<RepositoryReportFilterDataVM> reportFilterData = new List<RepositoryReportFilterDataVM>();
 
-            IEnumerable<GoldRepositoryReportFilterDataVM>? data = _store.GoldRepositories
-                .SelectMany(gr => _store.GoldRepositoryTransactions.Where(x => x.Id == gr.TransactionId), (gr, grt) => new { gr, grt })
+            IEnumerable<RepositoryReportFilterDataVM>? data = _store.Repositories
+                .SelectMany(gr => _store.RepositoryTransactions.Where(x => x.Id == gr.TransactionId), (gr, grt) => new { gr, grt })
                 .ToList()
-                .Select(x => new GoldRepositoryReportFilterDataVM()
+                .Select(x => new RepositoryReportFilterDataVM()
                 {
                     TransactionId = x.grt.Id,
                     RegDate = x.gr.RegDate,
-                    GoldTypeId = x.gr.GoldType,
-                    GoldType = GetGoldType(x.gr.GoldType),
-                    GoldMaintenanceTypeId = x.gr.GoldMaintenanceType,
-                    GoldMaintenanceType = GetGoldMaintenanceType(x.gr.GoldMaintenanceType),
-                    Carat = x.gr.Carat,
+                    EntityId = x.gr.Entity,
+                    Entity = GetEntityType(x.gr.Entity),
+                    MaintenanceTypeId = x.gr.MaintenanceTypeId,
+                    MaintenanceType = GetMaintenanceType(x.gr.MaintenanceTypeId),
                     RegUserId = x.gr.RegUserId,
-                    LastGoldValue = x.grt.LastGoldValue,
-                    NewGoldValue = x.grt.NewGoldValue,
+                    LastValue = x.grt.LastValue,
+                    NewValue = x.grt.NewValue,
                     TransactionTypeId = x.grt.TransactionType,
                     TransactionType = GetTransactionType(x.grt.TransactionType),
-                    Weight = x.grt.Weight,
+                    Weight = x.grt.Value,
                     RegPersianDate = ConvertToPersianDate(x.gr.RegDate),
                     UserName = GetUserName(x.grt.UserAdditionalData),
                     Role = GetUserRole(x.grt.UserAdditionalData),
                     ArchiveOperation = GetArchiveOperationsType(""),
                 });
 
-            IEnumerable<GoldRepositoryReportFilterDataVM>? archiveData = _store.ArchiveGoldRepositories
-                .SelectMany(agr => _store.GoldRepositoryTransactions.Where(x => x.Id == agr.TransactionId), (agr, grt) => new { agr, grt })
+            IEnumerable<RepositoryReportFilterDataVM>? archiveData = _store.ArchiveRepositories
+                .SelectMany(agr => _store.RepositoryTransactions.Where(x => x.Id == agr.TransactionId), (agr, grt) => new { agr, grt })
                 .ToList()
-                .Select(x => new GoldRepositoryReportFilterDataVM()
+                .Select(x => new RepositoryReportFilterDataVM()
                 {
                     TransactionId = x.grt.Id,
                     RegDate = x.agr.RegDate,
-                    GoldTypeId = x.agr.GoldType,
-                    GoldType = GetGoldType(x.agr.GoldType),
-                    GoldMaintenanceTypeId = x.agr.GoldMaintenanceType,
-                    GoldMaintenanceType = GetGoldMaintenanceType(x.agr.GoldMaintenanceType),
-                    Carat = x.agr.Carat,
+                    EntityId = x.agr.EntityType,
+                    Entity = GetEntityType(x.agr.EntityType),
+                    MaintenanceTypeId = x.agr.MaintenanceType,
+                    MaintenanceType = GetMaintenanceType(x.agr.MaintenanceType),
                     RegUserId = x.agr.RegUserId,
-                    LastGoldValue = x.grt.LastGoldValue,
-                    NewGoldValue = x.grt.NewGoldValue,
+                    LastValue = x.grt.LastValue,
+                    NewValue = x.grt.NewValue,
                     TransactionTypeId = x.grt.TransactionType,
                     TransactionType = GetTransactionType(x.grt.TransactionType),
-                    Weight = x.grt.Weight,
+                    Weight = x.grt.Value,
                     RegPersianDate = ConvertToPersianDate(x.agr.RegDate),
                     UserName = GetUserName(x.grt.UserAdditionalData),
                     Role = GetUserRole(x.grt.UserAdditionalData),
@@ -203,21 +171,21 @@ namespace GoldStore.BusinessLogics
 
             if (data != null)
             {
-                if (reportFilterVM.Carat != null && reportFilterVM.Carat != 0)
-                {
-                    data = data.Where(x => x.Carat == reportFilterVM.Carat).ToList();
-                }
+                //if (reportFilterVM.Carat != null && reportFilterVM.Carat != 0)
+                //{
+                //    data = data.Where(x => x.Carat == reportFilterVM.Carat).ToList();
+                //}
                 if (reportFilterVM.UserId != null && reportFilterVM.UserId != 0)
                 {
                     data = data.Where(x => x.RegUserId == reportFilterVM.UserId).ToList();
                 }
-                if (reportFilterVM.GoldType != null && reportFilterVM.GoldType != 0)
+                if (reportFilterVM.EntityType != null && reportFilterVM.EntityType != 0)
                 {
-                    data = data.Where(x => x.GoldTypeId == reportFilterVM.GoldType).ToList();
+                    data = data.Where(x => x.EntityId == (int)reportFilterVM.EntityType.Value).ToList();
                 }
                 if (reportFilterVM.MaintenanceType != null && reportFilterVM.MaintenanceType != 0)
                 {
-                    data = data.Where(x => x.GoldMaintenanceTypeId == reportFilterVM.MaintenanceType).ToList();
+                    data = data.Where(x => x.MaintenanceTypeId == reportFilterVM.MaintenanceType).ToList();
                 }
                 if (reportFilterVM.FromDate != null)
                 {

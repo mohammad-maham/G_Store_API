@@ -16,7 +16,7 @@ namespace GoldStore.BusinessLogics.IBusinessLogics
         double GetPrices(PriceCalcVM priceCalc);
         AmountThreshold GetLastThresholdAmount();
         AmountThreshold GetEntityThresholdAmount(EntityTypes entity);
-        Repository ChargeGoldRepository(ChargeStore chargeStore, string token);
+        Repository ChargeRepository(ChargeRepository chargeStore, string token);
         AmountThreshold ManageSupervisorThresholds(AmountThresholdVM thresholdVM);
         AmountThreshold GetAmountThreshold(long thresholdId);
         RepositoryStatusVM GetRepositoryStatistics(string token);

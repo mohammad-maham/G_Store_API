@@ -342,20 +342,20 @@ namespace GoldStore.BusinessLogics
                         basePrice = (threshold.CurrentPrice * priceCalc.Weight) ?? 0.0;
                     }
                 }
-                if (isGoldProduct)
+                if (isGoldProduct && priceCalc.Carat.HasValue && priceCalc.Carat.Value > 0)
                 {
                     if ((CalcTypes)priceCalc.CalcType != CalcTypes.none && threshold != null)
                     {
                         switch ((CalcTypes)priceCalc.CalcType)
                         {
                             case CalcTypes.none:
-                                res = basePrice * priceCalc.Carat;
+                                res = basePrice * priceCalc.Carat.Value;
                                 break;
                             case CalcTypes.buy:
-                                res = ThresholdsSault(threshold.BuyThreshold, basePrice) * priceCalc.Carat / 750;
+                                res = ThresholdsSault(threshold.BuyThreshold, basePrice) * priceCalc.Carat.Value / 750;
                                 break;
                             case CalcTypes.sell:
-                                res = ThresholdsSault(threshold.SelThreshold, basePrice) * priceCalc.Carat / 750;
+                                res = ThresholdsSault(threshold.SelThreshold, basePrice) * priceCalc.Carat.Value / 750;
                                 break;
                             case CalcTypes.threshold:
                                 res = threshold.CurrentPrice ?? 0.0;
@@ -365,7 +365,7 @@ namespace GoldStore.BusinessLogics
                     }
                     else
                     {
-                        res = (double)(basePrice * priceCalc.Carat / 750);
+                        res = (double)(basePrice * priceCalc.Carat.Value / 750);
                     }
                 }
                 else
@@ -424,7 +424,7 @@ namespace GoldStore.BusinessLogics
             return _store.AmountThresholds.FirstOrDefault(x => x.Status == 1 && x.BuyThreshold != 0 && x.SelThreshold != 0);
         }
 
-        public Repository ChargeGoldRepository(ChargeStore chargeStore, string token)
+        public Repository ChargeRepository(ChargeRepository chargeStore, string token)
         {
             Repository? repo = new();
             RepositoryTransaction repositoryTransaction = new();
@@ -511,7 +511,18 @@ namespace GoldStore.BusinessLogics
         public AmountThreshold ManageSupervisorThresholds(AmountThresholdVM thresholdVM)
         {
             AmountThreshold? threshold = new();
-            double onlinePrice = _gateway.GetOnlineGoldPrice();
+            double onlinePrice = 0;
+
+            switch (thresholdVM.EntityId)
+            {
+                case (int)EntityTypes.PhysicallyGold:
+                case (int)EntityTypes.VirtualyGold:
+                    onlinePrice = _gateway.GetOnlineGoldPrice();
+                    break;
+                default:
+                    break;
+            }
+
             thresholdVM.CurrentPrice = thresholdVM.IsOnlinePrice == 1 ? onlinePrice : thresholdVM.CurrentPrice;
 
             threshold = _store.AmountThresholds.FirstOrDefault(x => x.Status == 1 && x.RegUserId != 0);
@@ -527,6 +538,7 @@ namespace GoldStore.BusinessLogics
                     threshold.BuyThreshold = thresholdVM.BuyThreshold;
                     threshold.SelThreshold = thresholdVM.SelThreshold;
                     threshold.RegUserId = thresholdVM.RegUserId;
+                    threshold.EntityId = thresholdVM.EntityId;
                     _store.AmountThresholds.Update(threshold);
                     _store.SaveChanges();
                 }
@@ -541,6 +553,7 @@ namespace GoldStore.BusinessLogics
                 threshold.SelThreshold = thresholdVM.SelThreshold;
                 threshold.RegUserId = thresholdVM.RegUserId;
                 threshold.RegDate = DateTime.Now;
+                threshold.EntityId = thresholdVM.EntityId;
                 _store.AmountThresholds.Add(threshold);
                 _store.SaveChanges();
             }
@@ -567,7 +580,7 @@ namespace GoldStore.BusinessLogics
                 .Select(x => new RepositoryVM()
                 {
                     Weight = x.Value,
-                    EntityType = x.Entity,
+                    EntityTypeId = x.Entity,
                     LastUpdateGregDate = x.RegDate,
                     LastUpdateUserId = x.RegUserId,
                 })
@@ -580,7 +593,7 @@ namespace GoldStore.BusinessLogics
                 item.LastUpdateUser = GetUserNameById(item.LastUpdateUserId, token);
             }
 
-            statusVM.GoldRepositoryVM = lstRepos;
+            statusVM.RepositoryVM = lstRepos;
             statusVM.TotalWeight = totalWeights;
             return statusVM;
         }
