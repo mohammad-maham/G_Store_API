@@ -14,9 +14,9 @@ public partial class Supplier
 
     public long RegUserId { get; set; }
 
-    public DateTime RegDate { get; set; }
-
     public string SupplierInfo { get; set; } = null!;
 
     public string? Description { get; set; }
+
+    public DateTime RegDate { get; set; }
 }

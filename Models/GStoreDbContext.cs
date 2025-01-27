@@ -24,6 +24,8 @@ public partial class GStoreDbContext : DbContext
 
     public virtual DbSet<ArchiveRepository> ArchiveRepositories { get; set; }
 
+    public virtual DbSet<AvailabilityType> AvailabilityTypes { get; set; }
+
     public virtual DbSet<Entity> Entities { get; set; }
 
     public virtual DbSet<EntityMode> EntityModes { get; set; }
@@ -119,7 +121,18 @@ public partial class GStoreDbContext : DbContext
                 .HasIdentityOptions(null, null, 1000000000L, 1000000000000000000L, null, null);
             entity.Property(e => e.ArchiveOperation).HasColumnType("character varying");
             entity.Property(e => e.CaratologyInfo).HasColumnType("json");
-            entity.Property(e => e.MaintenanceType).HasDefaultValue((short)1);
+            entity.Property(e => e.MaintenanceType).HasDefaultValue(1);
+        });
+
+        modelBuilder.Entity<AvailabilityType>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("AvailabilityType_pkey");
+
+            entity.ToTable("AvailabilityType");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Name).HasMaxLength(50);
+            entity.Property(e => e.Title).HasMaxLength(100);
         });
 
         modelBuilder.Entity<Entity>(entity =>
@@ -130,8 +143,8 @@ public partial class GStoreDbContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Caption).HasColumnType("character varying");
-            entity.Property(e => e.EntityMode).HasDefaultValue((short)0);
-            entity.Property(e => e.MaterialId).HasDefaultValue((short)0);
+            entity.Property(e => e.EntityMode).HasDefaultValue(0);
+            entity.Property(e => e.MaterialId).HasDefaultValue(0);
             entity.Property(e => e.Name).HasMaxLength(100);
             entity.Property(e => e.Symbol).HasMaxLength(10);
         });
@@ -218,6 +231,7 @@ public partial class GStoreDbContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Name).HasMaxLength(50);
+            entity.Property(e => e.Title).HasMaxLength(100);
         });
 
         modelBuilder.Entity<Material>(entity =>
@@ -297,6 +311,7 @@ public partial class GStoreDbContext : DbContext
             entity.ToTable("Repository");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AvailabilityInfo).HasColumnType("json");
             entity.Property(e => e.TransactionId).HasDefaultValue(0L);
         });
 

@@ -5,9 +5,11 @@ namespace GoldStore.Models;
 
 public partial class Material
 {
-    public short Id { get; set; }
+    public int Id { get; set; }
 
     public string Name { get; set; } = null!;
 
-    public short Unit { get; set; }
+    public int Unit { get; set; }
+
+    public int DefultEntityyId { get; set; }
 }

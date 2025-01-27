@@ -18,7 +18,7 @@ public partial class ProductRepositoryTransaction
 
     public long BasketId { get; set; }
 
-    public short TransactionType { get; set; }
+    public int TransactionType { get; set; }
 
     public decimal TransactionCurrentPrice { get; set; }
 

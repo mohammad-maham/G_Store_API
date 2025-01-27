@@ -12,7 +12,7 @@ public partial class GoldRepository
 
     public short GoldType { get; set; }
 
-    public double Weight { get; set; }
+    public int Weight { get; set; }
 
     public short Carat { get; set; }
 

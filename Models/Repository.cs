@@ -19,4 +19,10 @@ public partial class Repository
     public DateTime RegDate { get; set; }
 
     public long TransactionId { get; set; }
+
+    public int MaintenanceTypeId { get; set; }
+
+    public int AvailabilityTypeId { get; set; }
+
+    public string AvailabilityInfo { get; set; } = null!;
 }

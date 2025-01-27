@@ -12,7 +12,7 @@ public partial class GoldRepositoryTransaction
 
     public short Status { get; set; }
 
-    public int TransactionType { get; set; }
+    public short TransactionType { get; set; }
 
     public double LastGoldValue { get; set; }
 
@@ -22,7 +22,7 @@ public partial class GoldRepositoryTransaction
 
     public double Weight { get; set; }
 
-    public int TransactionMode { get; set; }
+    public short TransactionMode { get; set; }
 
     public string? WalletInfo { get; set; }
 

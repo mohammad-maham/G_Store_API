@@ -10,15 +10,15 @@ public partial class ArchiveRepository
 
     public short Status { get; set; }
 
-    public short Type { get; set; }
+    public int Type { get; set; }
 
-    public int Weight { get; set; }
+    public decimal Weight { get; set; }
 
-    public short Carat { get; set; }
+    public int Carat { get; set; }
 
     public long RegUserId { get; set; }
 
-    public short EntityType { get; set; }
+    public int EntityType { get; set; }
 
     public string? CaratologyInfo { get; set; }
 
@@ -28,7 +28,7 @@ public partial class ArchiveRepository
 
     public string ArchiveOperation { get; set; } = null!;
 
-    public short MaintenanceType { get; set; }
+    public int MaintenanceType { get; set; }
 
     public long TransactionId { get; set; }
 

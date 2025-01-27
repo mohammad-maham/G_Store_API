@@ -9,7 +9,7 @@ public partial class ProductType
 
     public string Name { get; set; } = null!;
 
-    public short Unit { get; set; }
+    public int Unit { get; set; }
 
     public short Status { get; set; }
 

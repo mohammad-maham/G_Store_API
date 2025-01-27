@@ -20,7 +20,7 @@ public partial class ProductUserEffect
 
     public string? Message { get; set; }
 
-    public short MessageType { get; set; }
+    public int MessageType { get; set; }
 
     public short Status { get; set; }
 

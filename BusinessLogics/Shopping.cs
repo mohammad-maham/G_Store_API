@@ -52,8 +52,8 @@ namespace GoldStore.BusinessLogics
             {
                 if (CheckGoldInventory(order.Weight, (int)order.EntityId, 10))
                 {
-                    ownerRepository = store.Repositories.FirstOrDefault(r => r.Entity == (int)order.EntityId && r.Value > order.Weight && r.MaintenanceType == 10);
-                    bondedRepository = store.Repositories.FirstOrDefault(r => r.Entity == (int)order.EntityId && r.MaintenanceType == 11);
+                    ownerRepository = store.Repositories.FirstOrDefault(r => r.Entity == (int)order.EntityId && r.Value > order.Weight && r.MaintenanceTypeId == 10);
+                    bondedRepository = store.Repositories.FirstOrDefault(r => r.Entity == (int)order.EntityId && r.MaintenanceTypeId == 11);
 
                     if (ownerRepository != null && ownerRepository.Id != 0)
                     {
@@ -157,7 +157,7 @@ namespace GoldStore.BusinessLogics
                 .Any(x =>
                 x.Value >= weight &&
                 x.Entity == goldType &&
-                x.MaintenanceType == goldMaintenanceType);
+                x.MaintenanceTypeId == goldMaintenanceType);
         }
 
         public double GetBasePrices(EntityTypes entity, double weight = 0.0)
@@ -203,8 +203,8 @@ namespace GoldStore.BusinessLogics
             {
                 if (CheckGoldInventory(order.Weight, (int)order.EntityId, 11))
                 {
-                    ownerRepository = store.Repositories.FirstOrDefault(x => x.Entity == (int)order.EntityId && x.MaintenanceType == 10);
-                    bondedRepository = store.Repositories.FirstOrDefault(x => x.MaintenanceType == 11);
+                    ownerRepository = store.Repositories.FirstOrDefault(x => x.Entity == (int)order.EntityId && x.MaintenanceTypeId == 10);
+                    bondedRepository = store.Repositories.FirstOrDefault(x => x.MaintenanceTypeId == 11);
 
                     if (ownerRepository != null && ownerRepository.Id != 0)
                     {
@@ -429,7 +429,7 @@ namespace GoldStore.BusinessLogics
             Repository? repo = new();
             RepositoryTransaction repositoryTransaction = new();
 
-            repo = _store.Repositories.FirstOrDefault(x => x.Status == 1 && x.Entity == chargeStore.EntityType && x.MaintenanceType == chargeStore.MaintenanceType) ?? new Repository();
+            repo = _store.Repositories.FirstOrDefault(x => x.Status == 1 && x.Entity == chargeStore.EntityType && x.MaintenanceTypeId == chargeStore.MaintenanceType) ?? new Repository();
 
             if (repo != null && repo.Id != 0)
             {
@@ -483,7 +483,7 @@ namespace GoldStore.BusinessLogics
                     repo.Status = chargeStore.Status;
                     repo.Entity = (int)chargeStore.EntityType;
                     repo.RegUserId = chargeStore.RegUserId;
-                    repo.MaintenanceType = 10;
+                    repo.MaintenanceTypeId = 10;
 
                     long repositoryTransactionId = DataBaseHelper.GetPostgreSQLSequenceNextVal(_store, "seq_goldrepositorytransactions");
                     repositoryTransaction.Id = repositoryTransactionId;
