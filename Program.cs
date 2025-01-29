@@ -79,7 +79,6 @@ namespace GoldStore
             app.UseMiddleware<ExceptionMiddleware>();
             app.MapControllers();
 
-
             app.Run();
         }
     }

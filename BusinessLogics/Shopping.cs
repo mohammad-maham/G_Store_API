@@ -1,5 +1,5 @@
-﻿using GoldStore.BusinessLogics.IBusinessLogics;
-using GoldStore.Errors;
+﻿using GoldHelpers.Middleware;
+using GoldStore.BusinessLogics.IBusinessLogics;
 using GoldStore.Helpers;
 using GoldStore.Models;
 using Microsoft.EntityFrameworkCore;
@@ -35,10 +35,10 @@ namespace GoldStore.BusinessLogics
             _accounting = accounting;
         }
 
-        public ApiResponse Buy(OrderVM order, string token)
+        public APIResponse Buy(OrderVM order, string token)
         {
             long repositoryTransactionId = 0;
-            ApiResponse response = new();
+            APIResponse response = new();
             Repository? ownerRepository = new();
             Repository? bondedRepository = new();
             using GStoreDbContext? store = _store;
@@ -124,29 +124,29 @@ namespace GoldStore.BusinessLogics
                                 store.Repositories.Update(ownerRepository);
                                 store.Repositories.Update(bondedRepository);
                                 store.SaveChanges();
-                                response = new ApiResponse(data: repositoryTransactionId.ToString());
+                                response = new APIResponse(data: repositoryTransactionId.ToString());
                             }
                             else
                             {
-                                response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "خطای تراکنش کیف پول" };
+                                response = new APIResponse() { StatusCode = 400, Data = "false", Message = "خطای تراکنش کیف پول" };
                             }
                         }
                         else
                         {
-                            response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "قیمت انتخاب شده با قیمت بروز مغایرت دارد" };
+                            response = new APIResponse() { StatusCode = 400, Data = "false", Message = "قیمت انتخاب شده با قیمت بروز مغایرت دارد" };
                         }
                     }
                 }
                 else
                 {
-                    response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "موجودی انبار کافی نمی باشد" };
+                    response = new APIResponse() { StatusCode = 400, Data = "false", Message = "موجودی انبار کافی نمی باشد" };
                 }
                 scope.Complete();
             }
             catch (Exception ex)
             {
                 scope.Complete();
-                response = new ApiResponse() { StatusCode = 400, Data = "false", Message = ex.Message };
+                response = new APIResponse() { StatusCode = 400, Data = "false", Message = ex.Message };
             }
             return response;
         }
@@ -186,10 +186,10 @@ namespace GoldStore.BusinessLogics
             return _store.AmountThresholds.Any(x => x.Id == amountId || x.Status == 1);
         }
 
-        public ApiResponse Sell(OrderVM order, string token)
+        public APIResponse Sell(OrderVM order, string token)
         {
             long repositoryTransactionId = 0;
-            ApiResponse response = new();
+            APIResponse response = new();
             Repository? ownerRepository = new();
             Repository? bondedRepository = new();
             using GStoreDbContext? store = _store;
@@ -274,29 +274,29 @@ namespace GoldStore.BusinessLogics
                                 store.Repositories.Update(ownerRepository);
                                 store.Repositories.Update(bondedRepository);
                                 store.SaveChanges();
-                                response = new ApiResponse(data: repositoryTransactionId.ToString());
+                                response = new APIResponse(data: repositoryTransactionId.ToString());
                             }
                             else
                             {
-                                response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "خطای تراکنش کیف پول" };
+                                response = new APIResponse() { StatusCode = 400, Data = "false", Message = "خطای تراکنش کیف پول" };
                             }
                         }
                         else
                         {
-                            response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "قیمت انتخاب شده با قیمت بروز مغایرت دارد" };
+                            response = new APIResponse() { StatusCode = 400, Data = "false", Message = "قیمت انتخاب شده با قیمت بروز مغایرت دارد" };
                         }
                     }
                 }
                 else
                 {
-                    response = new ApiResponse() { StatusCode = 400, Data = "false", Message = "موجودی انبار کافی نمی باشد" };
+                    response = new APIResponse() { StatusCode = 400, Data = "false", Message = "موجودی انبار کافی نمی باشد" };
                 }
                 scope.Complete();
             }
             catch (Exception ex)
             {
                 scope.Complete();
-                response = new ApiResponse() { StatusCode = 400, Data = "false", Message = ex.Message };
+                response = new APIResponse() { StatusCode = 400, Data = "false", Message = ex.Message };
             }
             return response;
         }

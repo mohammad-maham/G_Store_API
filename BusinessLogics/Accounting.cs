@@ -1,4 +1,4 @@
-﻿using GoldHelpers.Models;
+﻿using GoldHelpers.Middleware;
 using GoldStore.BusinessLogics.IBusinessLogics;
 using GoldStore.Models;
 using Newtonsoft.Json;
@@ -47,7 +47,7 @@ namespace GoldStore.BusinessLogics
 
                 if (response.StatusCode == HttpStatusCode.OK && !string.IsNullOrEmpty(response.Content))
                 {
-                    ApiResponse apiResponse = JsonConvert.DeserializeObject<ApiResponse>(response.Content) ?? new ApiResponse();
+                    APIResponse apiResponse = JsonConvert.DeserializeObject<APIResponse>(response.Content) ?? new APIResponse();
                     if (apiResponse != null && !string.IsNullOrEmpty(apiResponse.Data))
                     {
                         userInfo = JsonConvert.DeserializeObject<UserInfoVM>(apiResponse.Data) ?? new UserInfoVM();
@@ -68,7 +68,9 @@ namespace GoldStore.BusinessLogics
             UserInfoVM userInfo = GetUserInfo(userId, token);
 
             if (userInfo != null)
+            {
                 username = $"{userInfo.FirstName} {userInfo.LastName}";
+            }
 
             return username;
         }

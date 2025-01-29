@@ -1,4 +1,4 @@
-﻿using GoldStore.Errors;
+﻿using GoldHelpers.Middleware;
 using GoldStore.Models;
 using static GoldStore.Models.Enums;
 
@@ -6,8 +6,8 @@ namespace GoldStore.BusinessLogics.IBusinessLogics
 {
     public interface IShopping
     {
-        ApiResponse Buy(OrderVM order, string token);
-        ApiResponse Sell(OrderVM order, string token);
+        APIResponse Buy(OrderVM order, string token);
+        APIResponse Sell(OrderVM order, string token);
         bool CheckGoldInventory(int weight, int goldType = 1, int goldMaintenanceType = 10);
         AmountThreshold UpdateAmountThreshold(AmountThreshold tresholdVM);
         AmountThreshold InsertAmountThreshold(AmountThreshold amountThreshold);
