@@ -2,6 +2,7 @@ using GoldHelpers.Middleware;
 using GoldStore.BusinessLogics;
 using GoldStore.BusinessLogics.IBusinessLogics;
 using GoldStore.Models;
+using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
@@ -60,10 +61,11 @@ namespace GoldStore
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
             AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
 
-            builder.Services.AddProblemDetails();
+            //builder.Services.AddProblemDetails();
 
             builder.Services.AddScoped<IShopping, Shopping>();
             builder.Services.AddScoped<IReports, Reports>();
+            builder.Services.AddTransient<ExceptionMiddleware>();
 
             WebApplication? app = builder.Build();
             // Configure the HTTP request pipeline.
