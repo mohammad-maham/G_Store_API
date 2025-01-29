@@ -1,4 +1,5 @@
-﻿using GoldStore.BusinessLogics.IBusinessLogics;
+﻿using GoldHelpers.Helpers;
+using GoldStore.BusinessLogics.IBusinessLogics;
 using GoldStore.Errors;
 using GoldStore.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -23,6 +24,7 @@ namespace GoldStore.Controllers
         }
 
         [HttpPost]
+        [GoldAuthorize]
         [Route("[action]")]
         public IActionResult GetRepositoryStatistics()
         {
@@ -42,6 +44,7 @@ namespace GoldStore.Controllers
         }
 
         [HttpPost]
+        [GoldAuthorize]
         [Route("[action]")]
         public IActionResult GetEntityTypes()
         {
@@ -55,6 +58,7 @@ namespace GoldStore.Controllers
         }
 
         [HttpPost]
+        [GoldAuthorize]
         [Route("[action]")]
         public IActionResult Buy([FromBody] OrderVM order)
         {
@@ -71,6 +75,7 @@ namespace GoldStore.Controllers
         }
 
         [HttpPost]
+        [GoldAuthorize]
         [Route("[action]")]
         public IActionResult Sell([FromBody] OrderVM order)
         {
@@ -87,6 +92,7 @@ namespace GoldStore.Controllers
         }
 
         [HttpPost]
+        [GoldAuthorize]
         [Route("[action]")]
         public IActionResult GetPrices([FromBody] PriceCalcVM calcVM)
         {
@@ -99,12 +105,15 @@ namespace GoldStore.Controllers
                 price = _shopping.GetPrices(calcVM);
 
                 if (price > 0)
+                {
                     return Ok(new ApiResponse(data: price.ToString("N0")));
+                }
             }
             return BadRequest(new ApiResponse(404));
         }
 
         [HttpPost]
+        [GoldAuthorize]
         [Route("[action]")]
         public IActionResult ChargeRepository([FromBody] ChargeRepository chargeStore)
         {
@@ -122,6 +131,7 @@ namespace GoldStore.Controllers
         }
 
         [HttpPost]
+        [GoldAuthorize]
         [Route("[action]")]
         public IActionResult ManageThresholds([FromBody] AmountThresholdVM threshold)
         {
@@ -135,6 +145,7 @@ namespace GoldStore.Controllers
         }
 
         [HttpPost]
+        [GoldAuthorize]
         [Route("[action]")]
         public IActionResult GetThreshold([FromBody] AmountThresholdVM threshold)
         {
