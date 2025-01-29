@@ -1,6 +1,6 @@
+using GoldHelpers.Middleware;
 using GoldStore.BusinessLogics;
 using GoldStore.BusinessLogics.IBusinessLogics;
-using GoldStore.Middleware;
 using GoldStore.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
