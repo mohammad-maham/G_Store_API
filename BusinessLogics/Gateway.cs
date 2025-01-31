@@ -1,8 +1,6 @@
-﻿using GoldHelpers.Middleware;
+﻿using GoldHelpers.Helpers;
+using GoldHelpers.Models;
 using GoldStore.BusinessLogics.IBusinessLogics;
-using Newtonsoft.Json;
-using RestSharp;
-using System.Net;
 
 namespace GoldStore.BusinessLogics
 {
@@ -25,28 +23,11 @@ namespace GoldStore.BusinessLogics
         public double GetOnlineGoldPrice()
         {
             double onlinePrice = 0.0;
-            string host = _config!.GetSection("ProjectUrls")["ApiGateway"]!;
 
             try
             {
-                // BaseURL
-                RestClient client = new($"{host}/api/Prices/GetGoldOnlinePrice");
-                RestRequest request = new()
-                {
-                    Method = Method.Post
-                };
-
-                // Headers
-                request.AddHeader("content-type", "application/json");
-
-                // Send SMS
-                RestResponse response = client.ExecutePost(request);
-
-                if (response.StatusCode == HttpStatusCode.OK && !string.IsNullOrEmpty(response.Content))
-                {
-                    APIResponse apiResponse = JsonConvert.DeserializeObject<APIResponse>(response.Content)!;
-                    onlinePrice = double.Parse(apiResponse.Data ?? "0");
-                }
+                GoldAPIResult? result = new GoldAPIResponse(GoldHosts.Gateway, "/api/Prices/GetGoldOnlinePrice", null!).Post();
+                onlinePrice = double.Parse(result?.Data ?? "0");
             }
             catch (Exception e)
             {

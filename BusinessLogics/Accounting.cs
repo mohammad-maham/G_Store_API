@@ -1,9 +1,8 @@
-﻿using GoldHelpers.Middleware;
+﻿using GoldHelpers.Helpers;
+using GoldHelpers.Models;
 using GoldStore.BusinessLogics.IBusinessLogics;
 using GoldStore.Models;
 using Newtonsoft.Json;
-using RestSharp;
-using System.Net;
 
 namespace GoldStore.BusinessLogics
 {
@@ -26,32 +25,13 @@ namespace GoldStore.BusinessLogics
         public UserInfoVM GetUserInfo(long userId, string token)
         {
             UserInfoVM userInfo = new();
-            string host = _config!.GetSection("ProjectUrls")["ApiAccounting"]!;
             try
             {
-                // BaseURL
-                RestClient client = new($"{host}/api/User/GetUserInfo");
-                RestRequest request = new()
+                GoldAPIResult? result = new GoldAPIResponse(GoldHosts.Accounting, "/api/User/GetUserInfo", new { Id = userId }, authorization: token).Post();
+
+                if (result != null && !string.IsNullOrEmpty(result.Data))
                 {
-                    Method = Method.Post
-                };
-
-                // Headers
-                request.AddHeader("content-type", "application/json");
-                request.AddHeader("Authorization", $"Bearer {token}");
-
-                request.AddJsonBody(new { Id = userId });
-
-                // Send Request
-                RestResponse response = client.ExecutePost(request);
-
-                if (response.StatusCode == HttpStatusCode.OK && !string.IsNullOrEmpty(response.Content))
-                {
-                    APIResponse apiResponse = JsonConvert.DeserializeObject<APIResponse>(response.Content) ?? new APIResponse();
-                    if (apiResponse != null && !string.IsNullOrEmpty(apiResponse.Data))
-                    {
-                        userInfo = JsonConvert.DeserializeObject<UserInfoVM>(apiResponse.Data) ?? new UserInfoVM();
-                    }
+                    userInfo = JsonConvert.DeserializeObject<UserInfoVM>(result.Data) ?? new UserInfoVM();
                 }
             }
             catch (Exception ex)

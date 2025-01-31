@@ -1,5 +1,6 @@
 ﻿using GoldHelpers.Helpers;
 using GoldHelpers.Middleware;
+using GoldHelpers.Models;
 using GoldStore.BusinessLogics.IBusinessLogics;
 using GoldStore.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -36,9 +37,9 @@ namespace GoldStore.Controllers
                 string token = headerValue.Parameter;
                 List<RepositoryReportFilterDataVM> report = _reports.RepositoryReport(filterVM, token);
                 string jsonData = JsonConvert.SerializeObject(report);
-                return Ok(new APIResponse(data: jsonData));
+                return Ok(new GoldAPIResult(data: jsonData));
             }
-            return BadRequest(new APIResponse(404));
+            return BadRequest(new GoldAPIResult(404));
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using GoldHelpers.Helpers;
-using GoldHelpers.Middleware;
+using GoldHelpers.Models;
 using GoldStore.BusinessLogics.IBusinessLogics;
 using GoldStore.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -37,10 +37,10 @@ namespace GoldStore.Controllers
                 if (statusVM != null)
                 {
                     string jsonData = JsonConvert.SerializeObject(statusVM);
-                    return Ok(new APIResponse(data: jsonData));
+                    return Ok(new GoldAPIResult(data: jsonData));
                 }
             }
-            return BadRequest(new APIResponse(401));
+            return BadRequest(new GoldAPIResult(401));
         }
 
         [HttpPost]
@@ -52,9 +52,9 @@ namespace GoldStore.Controllers
             if (goldTypes != null)
             {
                 string jsonData = JsonConvert.SerializeObject(goldTypes);
-                return Ok(new APIResponse(data: jsonData));
+                return Ok(new GoldAPIResult(data: jsonData));
             }
-            return BadRequest(new APIResponse(404));
+            return BadRequest(new GoldAPIResult(404));
         }
 
         [HttpPost]
@@ -68,10 +68,10 @@ namespace GoldStore.Controllers
             if (order != null && order.Weight > 0 && order.UserId != 0 && headerValue != null && headerValue.Parameter != null)
             {
                 string token = headerValue.Parameter;
-                APIResponse response = _shopping.Buy(order, token);
+                GoldAPIResult response = _shopping.Buy(order, token);
                 return Ok(response);
             }
-            return BadRequest(new APIResponse(404));
+            return BadRequest(new GoldAPIResult(404));
         }
 
         [HttpPost]
@@ -85,10 +85,10 @@ namespace GoldStore.Controllers
             if (order != null && order.Weight != 0 && order.UserId != 0 && headerValue != null && headerValue.Parameter != null)
             {
                 string token = headerValue.Parameter;
-                APIResponse response = _shopping.Sell(order, token);
+                GoldAPIResult response = _shopping.Sell(order, token);
                 return Ok(response);
             }
-            return BadRequest(new APIResponse(404));
+            return BadRequest(new GoldAPIResult(404));
         }
 
         [HttpPost]
@@ -106,10 +106,10 @@ namespace GoldStore.Controllers
 
                 if (price > 0)
                 {
-                    return Ok(new APIResponse(data: price.ToString("N0")));
+                    return Ok(new GoldAPIResult(data: price.ToString("N0")));
                 }
             }
-            return BadRequest(new APIResponse(404));
+            return BadRequest(new GoldAPIResult(404));
         }
 
         [HttpPost]
@@ -125,9 +125,9 @@ namespace GoldStore.Controllers
                 string token = headerValue.Parameter;
                 Repository? goldRepository = _shopping.ChargeRepository(chargeStore, token);
                 string jsonData = JsonConvert.SerializeObject(goldRepository);
-                return Ok(new APIResponse(data: jsonData));
+                return Ok(new GoldAPIResult(data: jsonData));
             }
-            return BadRequest(new APIResponse(404));
+            return BadRequest(new GoldAPIResult(404));
         }
 
         [HttpPost]
@@ -139,9 +139,9 @@ namespace GoldStore.Controllers
             {
                 AmountThreshold amountThreshold = _shopping.ManageSupervisorThresholds(threshold);
                 string jsonData = JsonConvert.SerializeObject(amountThreshold);
-                return Ok(new APIResponse(data: jsonData));
+                return Ok(new GoldAPIResult(data: jsonData));
             }
-            return BadRequest(new APIResponse(404));
+            return BadRequest(new GoldAPIResult(404));
         }
 
         [HttpPost]
@@ -153,9 +153,9 @@ namespace GoldStore.Controllers
             {
                 AmountThreshold? amountThreshold = _shopping.GetAmountThreshold(threshold.Id);
                 string jsonData = JsonConvert.SerializeObject(amountThreshold);
-                return Ok(new APIResponse(data: jsonData));
+                return Ok(new GoldAPIResult(data: jsonData));
             }
-            return BadRequest(new APIResponse(404));
+            return BadRequest(new GoldAPIResult(404));
         }
     }
 }
