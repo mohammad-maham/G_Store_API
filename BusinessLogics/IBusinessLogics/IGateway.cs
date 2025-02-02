@@ -2,6 +2,6 @@
 {
     public interface IGateway
     {
-        double GetOnlineGoldPrice();
+        double GetOnlineAmounts(long amountId);
     }
 }

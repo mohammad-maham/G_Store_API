@@ -94,15 +94,13 @@ namespace GoldStore.Controllers
         [HttpPost]
         [GoldAuthorize]
         [Route("[action]")]
-        public IActionResult GetPrices([FromBody] PriceCalcVM calcVM)
+        public IActionResult GetAmount([FromBody] PriceCalcVM calcVM)
         {
             double price = 0.0;
-
             if (calcVM != null && calcVM.Weight > 0 && calcVM.EntityId > 0)
             {
-                calcVM.Carat = ((calcVM.EntityId == Enums.EntityTypes.PhysicallyGold || calcVM.EntityId == Enums.EntityTypes.VirtualyGold) && calcVM.Carat == 0) ? 750 : calcVM.Carat;
-
-                price = _shopping.GetPrices(calcVM);
+                calcVM.Carat = (new long[] { 11101, 11102, 11111 }.Contains(calcVM.EntityId) && calcVM.Carat == 0) ? 750 : calcVM.Carat;
+                price = _shopping.GetAmount(calcVM);
 
                 if (price > 0)
                 {

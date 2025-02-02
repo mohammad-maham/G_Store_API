@@ -24,5 +24,5 @@ public partial class ArchiveAmountThreshold
 
     public long Id { get; set; }
 
-    public int EntityId { get; set; }
+    public int AmountId { get; set; }
 }

@@ -16,9 +16,9 @@ namespace GoldStore.Models
         [Display(Name = "عیار")]
         public double? Carat { get; set; }
 
-        [Display(Name = "نوع محصول")]
+        [Display(Name = "نوع موجودیت")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        public EntityTypes EntityId { get; set; }
+        public long EntityId { get; set; }
 
         [Display(Name = "شناسه متریال")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]

@@ -1,7 +1,5 @@
-﻿using GoldHelpers.Middleware;
-using GoldHelpers.Models;
+﻿using GoldHelpers.Models;
 using GoldStore.Models;
-using static GoldStore.Models.Enums;
 
 namespace GoldStore.BusinessLogics.IBusinessLogics
 {
@@ -13,10 +11,11 @@ namespace GoldStore.BusinessLogics.IBusinessLogics
         AmountThreshold UpdateAmountThreshold(AmountThreshold tresholdVM);
         AmountThreshold InsertAmountThreshold(AmountThreshold amountThreshold);
         bool isExistAmountThreshold(long amountId);
-        double GetBasePrices(EntityTypes entity,double weight = 0.0);
-        double GetPrices(PriceCalcVM priceCalc);
+        double GetBasePrices(long amountId, double weight = 0.0);
+        double GetAmount(PriceCalcVM priceCalc);
         AmountThreshold GetLastThresholdAmount();
-        AmountThreshold GetEntityThresholdAmount(EntityTypes entity);
+        AmountThreshold GetEntityThresholdAmount(long entityId);
+        Amount? GetAmountByEntityId(long entityId);
         Repository ChargeRepository(ChargeRepository chargeStore, string token);
         AmountThreshold ManageSupervisorThresholds(AmountThresholdVM thresholdVM);
         AmountThreshold GetAmountThreshold(long thresholdId);

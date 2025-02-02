@@ -16,6 +16,8 @@ public partial class GStoreDbContext : DbContext
         _config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json").Build();
     }
 
+    public virtual DbSet<Amount> Amounts { get; set; }
+
     public virtual DbSet<AmountThreshold> AmountThresholds { get; set; }
 
     public virtual DbSet<ArchiveAmountThreshold> ArchiveAmountThresholds { get; set; }
@@ -26,6 +28,8 @@ public partial class GStoreDbContext : DbContext
 
     public virtual DbSet<AvailabilityType> AvailabilityTypes { get; set; }
 
+    public virtual DbSet<DollarPrice> DollarPrices { get; set; }
+
     public virtual DbSet<Entity> Entities { get; set; }
 
     public virtual DbSet<EntityMode> EntityModes { get; set; }
@@ -35,6 +39,8 @@ public partial class GStoreDbContext : DbContext
     public virtual DbSet<GoldEntity> GoldEntities { get; set; }
 
     public virtual DbSet<GoldMaintenanceType> GoldMaintenanceTypes { get; set; }
+
+    public virtual DbSet<GoldPrice> GoldPrices { get; set; }
 
     public virtual DbSet<GoldRepository> GoldRepositories { get; set; }
 
@@ -60,14 +66,17 @@ public partial class GStoreDbContext : DbContext
 
     public virtual DbSet<RepositoryTransaction> RepositoryTransactions { get; set; }
 
+    public virtual DbSet<SilverPrice> SilverPrices { get; set; }
+
     public virtual DbSet<Status> Statuses { get; set; }
 
     public virtual DbSet<Supplier> Suppliers { get; set; }
 
+    public virtual DbSet<TeterPrice> TeterPrices { get; set; }
+
     public virtual DbSet<TransactionType> TransactionTypes { get; set; }
 
     public virtual DbSet<Unit> Units { get; set; }
-
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseNpgsql(_config.GetConnectionString("GStoreDbContext"), x => x.UseNodaTime());
@@ -75,6 +84,17 @@ public partial class GStoreDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Amount>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("Amount_pkey");
+
+            entity.ToTable("Amount");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Name).HasMaxLength(50);
+            entity.Property(e => e.Title).HasMaxLength(100);
+        });
+
         modelBuilder.Entity<AmountThreshold>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("AmountThreshold_pkey");
@@ -84,7 +104,7 @@ public partial class GStoreDbContext : DbContext
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
                 .HasIdentityOptions(null, null, 1000000000L, 1000000000000000000L, null, null);
-            entity.Property(e => e.EntityId).HasDefaultValue(0);
+            entity.Property(e => e.AmountId).HasDefaultValue(0);
         });
 
         modelBuilder.Entity<ArchiveAmountThreshold>(entity =>
@@ -93,7 +113,7 @@ public partial class GStoreDbContext : DbContext
                 .HasNoKey()
                 .ToTable("ArchiveAmountThreshold");
 
-            entity.Property(e => e.EntityId).HasDefaultValue(0);
+            entity.Property(e => e.AmountId).HasDefaultValue(0);
         });
 
         modelBuilder.Entity<ArchiveGoldRepository>(entity =>
@@ -135,6 +155,17 @@ public partial class GStoreDbContext : DbContext
             entity.Property(e => e.Title).HasMaxLength(100);
         });
 
+        modelBuilder.Entity<DollarPrice>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("DollarPrice_pkey");
+
+            entity.ToTable("DollarPrice", "history");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Other).HasColumnType("json");
+            entity.Property(e => e.Timestamp).HasDefaultValue(0L);
+        });
+
         modelBuilder.Entity<Entity>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("Entity_pkey");
@@ -142,10 +173,12 @@ public partial class GStoreDbContext : DbContext
             entity.ToTable("Entity");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AmountCode).HasDefaultValue(0);
             entity.Property(e => e.Caption).HasColumnType("character varying");
             entity.Property(e => e.EntityMode).HasDefaultValue(0);
             entity.Property(e => e.MaterialId).HasDefaultValue(0);
             entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.Scale).HasDefaultValueSql("1");
             entity.Property(e => e.Symbol).HasMaxLength(10);
         });
 
@@ -190,6 +223,17 @@ public partial class GStoreDbContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Name).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<GoldPrice>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("GoldPrice_pkey");
+
+            entity.ToTable("GoldPrice", "history");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Other).HasColumnType("json");
+            entity.Property(e => e.Timestamp).HasDefaultValue(0L);
         });
 
         modelBuilder.Entity<GoldRepository>(entity =>
@@ -325,6 +369,17 @@ public partial class GStoreDbContext : DbContext
             entity.Property(e => e.WalletInfo).HasColumnType("json");
         });
 
+        modelBuilder.Entity<SilverPrice>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("SilverPrice_pkey");
+
+            entity.ToTable("SilverPrice", "history");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Other).HasColumnType("json");
+            entity.Property(e => e.Timestamp).HasDefaultValue(0L);
+        });
+
         modelBuilder.Entity<Status>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("Status_pkey");
@@ -346,6 +401,17 @@ public partial class GStoreDbContext : DbContext
             entity.Property(e => e.Description).HasMaxLength(500);
             entity.Property(e => e.Name).HasColumnType("character varying");
             entity.Property(e => e.SupplierInfo).HasColumnType("json");
+        });
+
+        modelBuilder.Entity<TeterPrice>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("TeterPrice_pkey");
+
+            entity.ToTable("TeterPrice", "history");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Other).HasColumnType("json");
+            entity.Property(e => e.Timestamp).HasDefaultValue(0L);
         });
 
         modelBuilder.Entity<TransactionType>(entity =>

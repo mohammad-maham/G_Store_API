@@ -24,5 +24,5 @@ public partial class AmountThreshold
 
     public short IsOnlinePrice { get; set; }
 
-    public int EntityId { get; set; }
+    public int AmountId { get; set; }
 }

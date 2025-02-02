@@ -1,5 +1,4 @@
-﻿using GoldHelpers.Middleware;
-using GoldHelpers.Models;
+﻿using GoldHelpers.Models;
 using GoldStore.BusinessLogics.IBusinessLogics;
 using GoldStore.Helpers;
 using GoldStore.Models;
@@ -58,78 +57,87 @@ namespace GoldStore.BusinessLogics
 
                     if (ownerRepository != null && ownerRepository.Id != 0)
                     {
-                        DateTime now = DateTime.Now;
-                        RepositoryTransaction repositoryTransaction = new();
+                        Entity? entity = store.Entities.FirstOrDefault(x => x.Id == ownerRepository.Entity);
 
-                        decimal repoWeight = ownerRepository!.Value;
-                        ownerRepository!.Value -= order.Weight;
-                        ownerRepository.RegUserId = order.UserId;
-                        bondedRepository!.Value += order.Weight;
-                        bondedRepository.RegUserId = order.UserId;
-                        ownerRepository.RegDate = now;
-                        bondedRepository.RegDate = now;
-
-                        double baseOnlinePrice = GetBasePrices(order.EntityId, order.Weight);
-
-                        PriceCalcVM calcVM = new PriceCalcVM()
+                        if (entity != null && entity.Id > 0)
                         {
-                            CalcType = (int)CalcTypes.buy,
-                            Weight = order.Weight,
-                            Carat = order.Carat,
-                            EntityId = order.EntityId
-                        };
+                            DateTime now = DateTime.Now;
+                            RepositoryTransaction repositoryTransaction = new();
 
-                        double orderPrice = GetPrices(calcVM);
+                            decimal repoWeight = ownerRepository!.Value;
+                            ownerRepository!.Value -= order.Weight;
+                            ownerRepository.RegUserId = order.UserId;
+                            bondedRepository!.Value += order.Weight;
+                            bondedRepository.RegUserId = order.UserId;
+                            ownerRepository.RegDate = now;
+                            bondedRepository.RegDate = now;
 
-                        if (orderPrice == order.CurrentCalculatedPrice && order.SourceWalletCurrency != 0 && order.DestinationWalletCurrency != 0)
-                        {
-                            // STEP 1:
-                            WalletTransactionVM wallet = new()
+                            double baseOnlinePrice = GetBasePrices(entity.AmountCode, order.Weight);
+
+                            PriceCalcVM calcVM = new PriceCalcVM()
                             {
-                                SourceAmount = orderPrice,
-                                DestinationAmout = order.DestinationAmount,
-                                SourceWalletCurrency = order.SourceWalletCurrency,
-                                DestinationWalletCurrency = order.DestinationWalletCurrency,
-                                SourceAddress = order.SourceAddress,
-                                DestinationAddress = order.DestinationAddress,
-                                WalletId = order.WalleId,
-                                RegUserId = order.UserId
+                                CalcType = (int)CalcTypes.buy,
+                                Weight = order.Weight,
+                                Carat = order.Carat,
+                                EntityId = entity.Id
                             };
 
-                            // Perform Wallet Exchange
-                            bool isExchanged = _wallet.ExchangeLocalWallet(wallet);
-                            UserInfoVM userInfoVM = _accounting.GetUserInfo(order.UserId, token);
+                            double orderPrice = GetAmount(calcVM);
 
-                            if (isExchanged)
+                            if (orderPrice == order.CurrentCalculatedPrice && order.SourceWalletCurrency != 0 && order.DestinationWalletCurrency != 0)
                             {
-                                // STEP 2:
-                                repositoryTransactionId = DataBaseHelper.GetPostgreSQLSequenceNextVal(store, "seq_goldrepositorytransactions");
-                                repositoryTransaction.Id = repositoryTransactionId;
-                                repositoryTransaction.Value = order.Weight;
-                                repositoryTransaction.RegDate = DateTime.Now;
-                                repositoryTransaction.RegUserId = order.UserId;
-                                repositoryTransaction.RepositoryId = ownerRepository.Id;
-                                repositoryTransaction.LastValue = repoWeight;
-                                repositoryTransaction.NewValue = ownerRepository.Value;
-                                repositoryTransaction.Status = 0;
-                                repositoryTransaction.TransactionMode = 2; // Online
-                                repositoryTransaction.TransactionType = 2; // Buy in TransactionType table
-                                repositoryTransaction.WalletInfo = JsonConvert.SerializeObject(wallet);
-                                repositoryTransaction.UserAdditionalData = JsonConvert.SerializeObject(userInfoVM);
-                                store.RepositoryTransactions.Add(repositoryTransaction);
+                                // STEP 1:
+                                WalletTransactionVM wallet = new()
+                                {
+                                    SourceAmount = orderPrice,
+                                    DestinationAmout = order.DestinationAmount,
+                                    SourceWalletCurrency = order.SourceWalletCurrency,
+                                    DestinationWalletCurrency = order.DestinationWalletCurrency,
+                                    SourceAddress = order.SourceAddress,
+                                    DestinationAddress = order.DestinationAddress,
+                                    WalletId = order.WalleId,
+                                    RegUserId = order.UserId
+                                };
 
-                                ownerRepository.TransactionId = repositoryTransactionId;
-                                bondedRepository.TransactionId = repositoryTransactionId;
+                                // Perform Wallet Exchange
+                                bool isExchanged = _wallet.ExchangeLocalWallet(wallet);
+                                UserInfoVM userInfoVM = _accounting.GetUserInfo(order.UserId, token);
 
-                                // STEP 3:
-                                store.Repositories.Update(ownerRepository);
-                                store.Repositories.Update(bondedRepository);
-                                store.SaveChanges();
-                                response = new GoldAPIResult(data: repositoryTransactionId.ToString());
+                                if (isExchanged)
+                                {
+                                    // STEP 2:
+                                    repositoryTransactionId = DataBaseHelper.GetPostgreSQLSequenceNextVal(store, "seq_goldrepositorytransactions");
+                                    repositoryTransaction.Id = repositoryTransactionId;
+                                    repositoryTransaction.Value = order.Weight;
+                                    repositoryTransaction.RegDate = DateTime.Now;
+                                    repositoryTransaction.RegUserId = order.UserId;
+                                    repositoryTransaction.RepositoryId = ownerRepository.Id;
+                                    repositoryTransaction.LastValue = repoWeight;
+                                    repositoryTransaction.NewValue = ownerRepository.Value;
+                                    repositoryTransaction.Status = 0;
+                                    repositoryTransaction.TransactionMode = 2; // Online
+                                    repositoryTransaction.TransactionType = 2; // Buy in TransactionType table
+                                    repositoryTransaction.WalletInfo = JsonConvert.SerializeObject(wallet);
+                                    repositoryTransaction.UserAdditionalData = JsonConvert.SerializeObject(userInfoVM);
+                                    store.RepositoryTransactions.Add(repositoryTransaction);
+
+                                    ownerRepository.TransactionId = repositoryTransactionId;
+                                    bondedRepository.TransactionId = repositoryTransactionId;
+
+                                    // STEP 3:
+                                    store.Repositories.Update(ownerRepository);
+                                    store.Repositories.Update(bondedRepository);
+                                    store.SaveChanges();
+                                    response = new GoldAPIResult(data: repositoryTransactionId.ToString());
+                                }
+                                else
+                                {
+                                    response = new GoldAPIResult() { StatusCode = 400, Data = "false", Message = "خطای تراکنش کیف پول" };
+                                }
                             }
                             else
                             {
-                                response = new GoldAPIResult() { StatusCode = 400, Data = "false", Message = "خطای تراکنش کیف پول" };
+                                response = new GoldAPIResult() { StatusCode = 400, Data = "false", Message = "گاوصندوق یافت نشد" };
                             }
                         }
                         else
@@ -161,9 +169,9 @@ namespace GoldStore.BusinessLogics
                 x.MaintenanceTypeId == goldMaintenanceType);
         }
 
-        public double GetBasePrices(EntityTypes entity, double weight = 0.0)
+        public double GetBasePrices(long amountId, double weight = 0.0)
         {
-            double onlinePrice = _gateway.GetOnlineGoldPrice();
+            double onlinePrice = _gateway.GetOnlineAmounts(amountId);
             return onlinePrice * weight;
         }
 
@@ -207,79 +215,89 @@ namespace GoldStore.BusinessLogics
                     ownerRepository = store.Repositories.FirstOrDefault(x => x.Entity == (int)order.EntityId && x.MaintenanceTypeId == 10);
                     bondedRepository = store.Repositories.FirstOrDefault(x => x.MaintenanceTypeId == 11);
 
+
                     if (ownerRepository != null && ownerRepository.Id != 0)
                     {
-                        DateTime now = DateTime.Now;
-                        RepositoryTransaction repositoryTransaction = new();
+                        Entity? entity = store.Entities.FirstOrDefault(x => x.Id == ownerRepository.Entity);
 
-                        decimal repoWeight = ownerRepository!.Value;
-                        ownerRepository!.Value += order.Weight;
-                        ownerRepository.RegUserId = order.UserId;
-                        bondedRepository!.Value -= order.Weight;
-                        bondedRepository.RegUserId = order.UserId;
-                        ownerRepository.RegDate = now;
-                        bondedRepository.RegDate = now;
-
-                        double baseOnlinePrice = GetBasePrices(order.EntityId, order.Weight);
-                        PriceCalcVM calcVM = new PriceCalcVM()
+                        if (entity != null && entity.Id > 0)
                         {
-                            CalcType = (int)CalcTypes.sell,
-                            Weight = order.Weight,
-                            Carat = order.Carat,
-                            EntityId = order.EntityId
-                        };
+                            DateTime now = DateTime.Now;
+                            RepositoryTransaction repositoryTransaction = new();
 
-                        double orderPrice = GetPrices(calcVM);
+                            decimal repoWeight = ownerRepository!.Value;
+                            ownerRepository!.Value += order.Weight;
+                            ownerRepository.RegUserId = order.UserId;
+                            bondedRepository!.Value -= order.Weight;
+                            bondedRepository.RegUserId = order.UserId;
+                            ownerRepository.RegDate = now;
+                            bondedRepository.RegDate = now;
 
-                        if (orderPrice == order.CurrentCalculatedPrice && order.SourceWalletCurrency != 0 && order.DestinationWalletCurrency != 0)
-                        {
-                            // STEP 1:
-                            WalletTransactionVM wallet = new()
+                            double baseOnlinePrice = GetBasePrices(entity.AmountCode, order.Weight);
+                            PriceCalcVM calcVM = new PriceCalcVM()
                             {
-                                SourceAmount = order.SourceAmount,
-                                DestinationAmout = orderPrice,
-                                SourceWalletCurrency = order.SourceWalletCurrency,
-                                DestinationWalletCurrency = order.DestinationWalletCurrency,
-                                SourceAddress = order.SourceAddress,
-                                DestinationAddress = order.DestinationAddress,
-                                WalletId = order.WalleId,
-                                RegUserId = order.UserId
+                                CalcType = (int)CalcTypes.sell,
+                                Weight = order.Weight,
+                                Carat = order.Carat,
+                                EntityId = entity.Id
                             };
 
-                            // Perform Wallet Exchange
-                            bool isExchanged = _wallet.ExchangeLocalWallet(wallet);
-                            UserInfoVM userInfoVM = _accounting.GetUserInfo(order.UserId, token);
+                            double orderPrice = GetAmount(calcVM);
 
-                            if (isExchanged)
+                            if (orderPrice == order.CurrentCalculatedPrice && order.SourceWalletCurrency != 0 && order.DestinationWalletCurrency != 0)
                             {
-                                // STEP 2:
-                                repositoryTransactionId = DataBaseHelper.GetPostgreSQLSequenceNextVal(store, "seq_goldrepositorytransactions");
-                                repositoryTransaction.Id = repositoryTransactionId;
-                                repositoryTransaction.Value = order.Weight;
-                                repositoryTransaction.RegDate = DateTime.Now;
-                                repositoryTransaction.RegUserId = order.UserId;
-                                repositoryTransaction.RepositoryId = ownerRepository.Id;
-                                repositoryTransaction.LastValue = repoWeight;
-                                repositoryTransaction.NewValue = ownerRepository.Value;
-                                repositoryTransaction.Status = 0;
-                                repositoryTransaction.TransactionMode = 2; // Online
-                                repositoryTransaction.TransactionType = 1; // Sell in TransactionType table
-                                repositoryTransaction.WalletInfo = JsonConvert.SerializeObject(wallet);
-                                repositoryTransaction.UserAdditionalData = JsonConvert.SerializeObject(userInfoVM);
-                                store.RepositoryTransactions.Add(repositoryTransaction);
+                                // STEP 1:
+                                WalletTransactionVM wallet = new()
+                                {
+                                    SourceAmount = order.SourceAmount,
+                                    DestinationAmout = orderPrice,
+                                    SourceWalletCurrency = order.SourceWalletCurrency,
+                                    DestinationWalletCurrency = order.DestinationWalletCurrency,
+                                    SourceAddress = order.SourceAddress,
+                                    DestinationAddress = order.DestinationAddress,
+                                    WalletId = order.WalleId,
+                                    RegUserId = order.UserId
+                                };
 
-                                ownerRepository.TransactionId = repositoryTransactionId;
-                                bondedRepository.TransactionId = repositoryTransactionId;
+                                // Perform Wallet Exchange
+                                bool isExchanged = _wallet.ExchangeLocalWallet(wallet);
+                                UserInfoVM userInfoVM = _accounting.GetUserInfo(order.UserId, token);
 
-                                // STEP 3:
-                                store.Repositories.Update(ownerRepository);
-                                store.Repositories.Update(bondedRepository);
-                                store.SaveChanges();
-                                response = new GoldAPIResult(data: repositoryTransactionId.ToString());
+                                if (isExchanged)
+                                {
+                                    // STEP 2:
+                                    repositoryTransactionId = DataBaseHelper.GetPostgreSQLSequenceNextVal(store, "seq_goldrepositorytransactions");
+                                    repositoryTransaction.Id = repositoryTransactionId;
+                                    repositoryTransaction.Value = order.Weight;
+                                    repositoryTransaction.RegDate = DateTime.Now;
+                                    repositoryTransaction.RegUserId = order.UserId;
+                                    repositoryTransaction.RepositoryId = ownerRepository.Id;
+                                    repositoryTransaction.LastValue = repoWeight;
+                                    repositoryTransaction.NewValue = ownerRepository.Value;
+                                    repositoryTransaction.Status = 0;
+                                    repositoryTransaction.TransactionMode = 2; // Online
+                                    repositoryTransaction.TransactionType = 1; // Sell in TransactionType table
+                                    repositoryTransaction.WalletInfo = JsonConvert.SerializeObject(wallet);
+                                    repositoryTransaction.UserAdditionalData = JsonConvert.SerializeObject(userInfoVM);
+                                    store.RepositoryTransactions.Add(repositoryTransaction);
+
+                                    ownerRepository.TransactionId = repositoryTransactionId;
+                                    bondedRepository.TransactionId = repositoryTransactionId;
+
+                                    // STEP 3:
+                                    store.Repositories.Update(ownerRepository);
+                                    store.Repositories.Update(bondedRepository);
+                                    store.SaveChanges();
+                                    response = new GoldAPIResult(data: repositoryTransactionId.ToString());
+                                }
+                                else
+                                {
+                                    response = new GoldAPIResult() { StatusCode = 400, Data = "false", Message = "خطای تراکنش کیف پول" };
+                                }
                             }
                             else
                             {
-                                response = new GoldAPIResult() { StatusCode = 400, Data = "false", Message = "خطای تراکنش کیف پول" };
+                                response = new GoldAPIResult() { StatusCode = 400, Data = "false", Message = "گاوصندوق یافت نشد" };
                             }
                         }
                         else
@@ -317,82 +335,97 @@ namespace GoldStore.BusinessLogics
             return new AmountThreshold();
         }
 
-        public double GetPrices(PriceCalcVM priceCalc)
+        public double GetAmount(PriceCalcVM priceCalc)
         {
             double res = 0.0;
             double basePrice = 0.0;
-            bool isGoldProduct = (priceCalc.EntityId == EntityTypes.PhysicallyGold || priceCalc.EntityId == EntityTypes.VirtualyGold);
+            bool isGoldProduct = (new long[] { 11101, 11102, 11111 }.Contains(priceCalc.EntityId));
 
             try
             {
                 AmountThreshold? threshold = GetEntityThresholdAmount(priceCalc.EntityId);
+                Entity? entity = _store.Entities.FirstOrDefault(x => x.Id == priceCalc.EntityId);
 
-                if (threshold != null && threshold.IsOnlinePrice == 0)
+                if (entity != null && entity.Id > 0)
                 {
-                    if (threshold.ExpireEffectDate < DateTime.Now)
+                    // *** Check threshold ***
+                    if (threshold != null && threshold.IsOnlinePrice == 0)
                     {
-                        basePrice = GetBasePrices(priceCalc.EntityId, priceCalc.Weight);
-                        threshold.ExpireEffectDate = DateTime.Now.AddMinutes(10);
-                        threshold.CurrentPrice = basePrice;
-                        threshold.RegUserId = 1;
-                        _store.AmountThresholds.Entry(threshold).State = EntityState.Modified;
-                        _store.SaveChanges();
-                    }
-                    else
-                    {
-                        basePrice = (threshold.CurrentPrice * priceCalc.Weight) ?? 0.0;
-                    }
-                }
-                if (isGoldProduct && priceCalc.Carat.HasValue && priceCalc.Carat.Value > 0)
-                {
-                    if ((CalcTypes)priceCalc.CalcType != CalcTypes.none && threshold != null)
-                    {
-                        switch ((CalcTypes)priceCalc.CalcType)
+                        if (threshold.ExpireEffectDate < DateTime.Now)
                         {
-                            case CalcTypes.none:
-                                res = basePrice * priceCalc.Carat.Value;
-                                break;
-                            case CalcTypes.buy:
-                                res = ThresholdsSault(threshold.BuyThreshold, basePrice) * priceCalc.Carat.Value / 750;
-                                break;
-                            case CalcTypes.sell:
-                                res = ThresholdsSault(threshold.SelThreshold, basePrice) * priceCalc.Carat.Value / 750;
-                                break;
-                            case CalcTypes.threshold:
-                                res = threshold.CurrentPrice ?? 0.0;
-                                break;
-
+                            basePrice = GetBasePrices(threshold.AmountId, priceCalc.Weight);
+                            threshold.ExpireEffectDate = DateTime.Now.AddMinutes(10);
+                            threshold.CurrentPrice = (basePrice * entity.Scale);
+                            threshold.RegUserId = 1;
+                            _store.AmountThresholds.Entry(threshold).State = EntityState.Modified;
+                            _store.SaveChanges();
+                        }
+                        else
+                        {
+                            basePrice = ((threshold.CurrentPrice * priceCalc.Weight) * entity.Scale) ?? 0.0;
                         }
                     }
                     else
                     {
-                        res = (double)(basePrice * priceCalc.Carat.Value / 750);
+                        Amount? amount = GetAmountByEntityId(priceCalc.EntityId);
+                        if (amount != null && amount.Id > 0)
+                            basePrice = GetBasePrices(amount.Id, priceCalc.Weight) * entity.Scale;
                     }
-                }
-                else
-                {
-                    if ((CalcTypes)priceCalc.CalcType != CalcTypes.none && threshold != null)
-                    {
-                        switch ((CalcTypes)priceCalc.CalcType)
-                        {
-                            case CalcTypes.none:
-                                res = basePrice;
-                                break;
-                            case CalcTypes.buy:
-                                res = ThresholdsSault(threshold.BuyThreshold, basePrice);
-                                break;
-                            case CalcTypes.sell:
-                                res = ThresholdsSault(threshold.SelThreshold, basePrice);
-                                break;
-                            case CalcTypes.threshold:
-                                res = threshold.CurrentPrice ?? 0.0;
-                                break;
 
+                    // *** Calculate Prices ***
+                    if (isGoldProduct && priceCalc.Carat.HasValue && priceCalc.Carat.Value > 0)
+                    {
+                        // Gold Carat for Gold Entites
+                        if ((CalcTypes)priceCalc.CalcType != CalcTypes.none && threshold != null)
+                        {
+                            switch ((CalcTypes)priceCalc.CalcType)
+                            {
+                                case CalcTypes.none:
+                                    res = basePrice * priceCalc.Carat.Value;
+                                    break;
+                                case CalcTypes.buy:
+                                    res = ThresholdsSault(threshold.BuyThreshold, basePrice) * priceCalc.Carat.Value / 750;
+                                    break;
+                                case CalcTypes.sell:
+                                    res = ThresholdsSault(threshold.SelThreshold, basePrice) * priceCalc.Carat.Value / 750;
+                                    break;
+                                case CalcTypes.threshold:
+                                    res = threshold.CurrentPrice ?? 0.0;
+                                    break;
+
+                            }
+                        }
+                        else
+                        {
+                            res = (double)(basePrice * priceCalc.Carat.Value / 750);
                         }
                     }
                     else
                     {
-                        res = (double)(basePrice);
+                        // Silver, USD, USDT, e.g...
+                        if ((CalcTypes)priceCalc.CalcType != CalcTypes.none && threshold != null)
+                        {
+                            switch ((CalcTypes)priceCalc.CalcType)
+                            {
+                                case CalcTypes.none:
+                                    res = basePrice;
+                                    break;
+                                case CalcTypes.buy:
+                                    res = ThresholdsSault(threshold.BuyThreshold, basePrice);
+                                    break;
+                                case CalcTypes.sell:
+                                    res = ThresholdsSault(threshold.SelThreshold, basePrice);
+                                    break;
+                                case CalcTypes.threshold:
+                                    res = threshold.CurrentPrice ?? 0.0;
+                                    break;
+
+                            }
+                        }
+                        else
+                        {
+                            res = (double)(basePrice);
+                        }
                     }
                 }
             }
@@ -514,11 +547,11 @@ namespace GoldStore.BusinessLogics
             AmountThreshold? threshold = new();
             double onlinePrice = 0;
 
-            switch (thresholdVM.EntityId)
+            switch (thresholdVM.AmountId)
             {
                 case (int)EntityTypes.PhysicallyGold:
                 case (int)EntityTypes.VirtualyGold:
-                    onlinePrice = _gateway.GetOnlineGoldPrice();
+                    onlinePrice = _gateway.GetOnlineAmounts(0);
                     break;
                 default:
                     break;
@@ -539,7 +572,7 @@ namespace GoldStore.BusinessLogics
                     threshold.BuyThreshold = thresholdVM.BuyThreshold;
                     threshold.SelThreshold = thresholdVM.SelThreshold;
                     threshold.RegUserId = thresholdVM.RegUserId;
-                    threshold.EntityId = thresholdVM.EntityId;
+                    threshold.AmountId = thresholdVM.AmountId;
                     _store.AmountThresholds.Update(threshold);
                     _store.SaveChanges();
                 }
@@ -554,7 +587,7 @@ namespace GoldStore.BusinessLogics
                 threshold.SelThreshold = thresholdVM.SelThreshold;
                 threshold.RegUserId = thresholdVM.RegUserId;
                 threshold.RegDate = DateTime.Now;
-                threshold.EntityId = thresholdVM.EntityId;
+                threshold.AmountId = thresholdVM.AmountId;
                 _store.AmountThresholds.Add(threshold);
                 _store.SaveChanges();
             }
@@ -620,13 +653,30 @@ namespace GoldStore.BusinessLogics
             return goldTypesVM;
         }
 
-        public AmountThreshold GetEntityThresholdAmount(EntityTypes entity)
+        public AmountThreshold GetEntityThresholdAmount(long entityId)
         {
-            AmountThreshold? threshold = _store.AmountThresholds
-                .Where(x => x.Status == 1 && x.BuyThreshold > 0 && x.SelThreshold > 0 && x.EntityId == (long)entity)
-                .FirstOrDefault();
+            AmountThreshold? threshold = new();
+            Entity? entity = _store.Entities.FirstOrDefault(x => x.Id == entityId);
 
+            if (entity != null && entity.Id > 0)
+            {
+                threshold = _store.AmountThresholds
+                      .Where(x => x.Status == 1 && x.BuyThreshold > 0 && x.SelThreshold > 0 && x.AmountId == entity.Id)
+                      .FirstOrDefault();
+            }
             return threshold;
+        }
+
+        public Amount? GetAmountByEntityId(long entityId)
+        {
+            Amount? amount = new();
+
+            if (entityId > 0)
+            {
+                Entity? entity = _store.Entities.FirstOrDefault(x => x.Id == entityId);
+                amount = _store.Amounts.FirstOrDefault(x => entity != null && entity.Id > 0 && x.Id == entity.AmountCode);
+            }
+            return amount;
         }
     }
 }

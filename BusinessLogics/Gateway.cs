@@ -20,13 +20,13 @@ namespace GoldStore.BusinessLogics
             _config = config;
         }
 
-        public double GetOnlineGoldPrice()
+        public double GetOnlineAmounts(long amountId)
         {
             double onlinePrice = 0.0;
 
             try
             {
-                GoldAPIResult? result = new GoldAPIResponse(GoldHosts.Gateway, "/api/Prices/GetGoldOnlinePrice", null!).Post();
+                GoldAPIResult? result = new GoldAPIResponse(GoldHosts.Gateway, "/api/Prices/GetOnlineAmount", new { amountId }).Post();
                 onlinePrice = double.Parse(result?.Data ?? "0");
             }
             catch (Exception e)

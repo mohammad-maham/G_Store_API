@@ -14,13 +14,13 @@ public partial class GoldRepositoryTransaction
 
     public short TransactionType { get; set; }
 
-    public double LastGoldValue { get; set; }
+    public decimal LastGoldValue { get; set; }
 
-    public double NewGoldValue { get; set; }
+    public decimal NewGoldValue { get; set; }
 
     public long RegUserId { get; set; }
 
-    public double Weight { get; set; }
+    public decimal Weight { get; set; }
 
     public short TransactionMode { get; set; }
 

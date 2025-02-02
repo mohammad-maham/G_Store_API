@@ -20,4 +20,8 @@ public partial class Entity
     public int MaterialId { get; set; }
 
     public int EntityMode { get; set; }
+
+    public double Scale { get; set; }
+
+    public int AmountCode { get; set; }
 }
