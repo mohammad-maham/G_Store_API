@@ -8,9 +8,9 @@ public partial class GoldPrice
 {
     public long Id { get; set; }
 
-    public decimal Value { get; set; }
+    public double Value { get; set; }
 
-    public decimal OrginalValue { get; set; }
+    public double OrginalValue { get; set; }
 
     public long Timestamp { get; set; }
 
